@@ -1,0 +1,101 @@
+body {
+    background-color: black;
+    overflow: hidden;
+}
+
+#game-field {
+    padding: 0;
+    position: relative;
+}
+
+#score-wrapper {
+    min-width: 120px;
+    background-color: #40eecf;
+    color: black;
+    font-size: 23px;
+    opacity: 0.6;
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    padding: 5px;
+    border-radius: 5px;
+}
+
+#leader-board-wrapper {
+    min-width: 200px;
+    min-height: 220px;
+    background-color: #717504;
+    color: white;
+    font-size: 18px;
+    opacity: 0.5;
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    border-radius: 5px;
+}
+
+#leader-board {
+    padding: 5px;
+}
+
+.active {
+    background-color: #4d0000;
+}
+
+canvas {
+    display: block;
+    background-color: white;
+}
+
+.modal-sm {
+    min-width: 500px;
+    width: 30%;
+}
+
+.modal-content {
+    margin-top: 100px;
+    background-color: #FFFFFF;
+    border-radius: 10px;
+}
+
+.text-input {
+    font-size: 20px;
+    display: block;
+    margin: auto;
+    margin-bottom: 20px;
+    width: 90%;
+    padding: 5px;
+    border-radius: 5px;
+}
+
+.error-message {
+    font-size: 13px;
+    color: #e60000;
+}
+
+.play-button {
+    font-size: 20px;
+    display: block;
+    margin: 5px auto 5px;
+    width: 90%;
+    background-color: #e65100;
+    color: #FFFFFF;
+}
+
+#game-message-wrapper {
+    position: fixed;
+    width: 100%;
+    bottom: 20px;
+}
+
+#game-message {
+    display: table;
+    font-size: 20px;
+    border-radius: 5px;
+    padding: 5px 15px;
+    color: white;
+    background-color: #e600e6;
+    margin: auto;
+    opacity: 0;
+}
+

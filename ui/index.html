@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Agar Winner</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.4.1/dist/css/bootstrap.min.css"
+          integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="style.css">
+</head>
+<body>
+
+<div id="container">
+    <div id="game-field" class="col-sm-12">
+<!--        <canvas id="game-board" style="background: url('star-field.gif'); background-size: cover;"></canvas>-->
+        <canvas id="game-board" style="background: url('starfield.jpg')"></canvas>
+        <div id="score-wrapper" class="hiddenOnStart" hidden>
+            <div>Score: <span class="player-score"></span></div>
+        </div>
+        <div id="leader-board-wrapper" class="hiddenOnStart" hidden>
+            <div id="leader-board">
+                <h3 class="text-center">Leader Board</h3>
+                <hr>
+                <ol class="leader-board">
+                    <li class="leaderboard-player"></li>
+                </ol>
+                <hr>
+            </div>
+        </div>
+        <div id="game-message-wrapper">
+            <div id="game-message">{{gameMessage}}</div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="game-start" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+     aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header text-center">
+                <h5 class="modal-title  w-100">Agar Winner</h5>
+            </div>
+            <div class="modal-body">
+                <form class="name-form">
+                    <div class="text-center error-message"></div>
+                    <input id="name-input" class="text-input text-center form-control" type="text" name="name-input"
+                           placeholder="Enter your name here" required>
+                    <button type="submit" class="btn play-button play-guest">Play</button>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <div id="instructions">
+                    <label id="how-to-play">Instructions:</label>
+                    <ul>
+                        <li>Move mouse on the screen to move own character.</li>
+                        <li>Absorb orbs by running over them in order to grow.</li>
+                        <li>The larger you get the slower you are.</li>
+                        <li>Absorb smaller players to get larger without losing speed.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+        integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+        crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.14.7/dist/umd/popper.min.js"
+        integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+        crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/js/bootstrap.min.js"
+        integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+        crossorigin="anonymous"></script>
+<script type="module" src="main.js"></script>
+</body>
+</html>
