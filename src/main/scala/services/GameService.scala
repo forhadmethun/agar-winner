@@ -12,7 +12,6 @@ import io.circe.parser.*
 import io.circe.syntax.*
 import fs2.{Stream, *}
 import models.*
-import models.Messages.*
 
 final class GameService[F[_]](
     val game: F[Game[F]]
@@ -20,16 +19,15 @@ final class GameService[F[_]](
   def subscribe: Stream[F, GameMessage] =
     Stream.eval(game).flatMap(_.subscribe)
 
-  def publish(m: GameMessage)(using MonadThrow[F]): F[Unit] =
-    game.flatMap(_.publish(m))
-
+  def publish(msg: F[GameMessage])(using MonadThrow[F]): F[Unit] = {
+    for {
+      m <- msg
+      g <- game
+      _ <- g.publish(m)
+    } yield ()
+  }
   protected def deamon(using Concurrent[F]): F[Unit] =
-    def next: F[Unit] = {
-      game.flatMap(game => {
-        Spawn[F].start(game.deamon).void
-      })
-    }
-    Spawn[F].start(next).void
+    game.flatMap(g => Spawn[F].start(g.deamon).void)
 
 object GameService:
   def create[F[_]: Async]: F[GameService[F]] =
@@ -39,27 +37,31 @@ object GameService:
       _ <- service.deamon
     yield service
 
-  def extractMessage[F[_]](text: String): GameMessage = {
+  def extractMessage[F[_]: Sync](text: String): F[GameMessage] = {
     decode[InitMessage](text)
       .map { init =>
-        GameMessage(
-          init.`type`,
-          InitMessageResponse(
-            "initReturn",
-            InitMessageResponseData(Orb.generateOrbs(Settings()))
-          ).asJson.toString
-        )
+        InitMessageResponseData
+          .create[F]
+          .map(data =>
+            GameMessage(
+              init.messageType,
+              InitMessageResponse("initReturn", data).asJson.toString
+            )
+          )
       }
       .orElse {
         decode[TickMessage](text).map { tick =>
-          GameMessage(
-            tick.`type`,
-            s"xVector: ${tick.data.xVector}, yVector: ${tick.data.yVector}"
+          Sync[F].pure(
+            GameMessage(
+              tick.messageType,
+              s"xVector: ${tick.data.xVector}, yVector: ${tick.data.yVector}"
+            )
           )
         }
       }
       .fold(
-        error => GameMessage("error", s"JSON parsing error: $error"),
+        error =>
+          Sync[F].pure(GameMessage("error", s"JSON parsing error: $error")),
         identity
       )
   }
@@ -88,4 +90,4 @@ object Game:
       topic <- Topic[F, GameMessage]
     yield Game(topic, q)
 
-final case class GameMessage(id: String, content: String) derives Codec.AsObject
+final case class GameMessage(id: String, content: String)

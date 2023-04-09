@@ -1,21 +1,48 @@
 package models
 
+import cats.effect.IO
+import cats.effect.Sync
+import cats.syntax.all.*
+import cats.effect.unsafe.implicits.global
+import models.Settings._
 case class PlayerConfig(defaultSpeed: Int, defaultZoom: Double)
 
-case class PlayerData(playerName: String, settings: Settings) {
-  val uid: String = java.util.UUID.randomUUID().toString
-  val locX: Int = scala.util.Random.nextInt(settings.worldWidth) + 100
-  val locY: Int = scala.util.Random.nextInt(settings.worldHeight) + 100
-  val radius: Int = settings.defaultSize
-  val color: String = getRandomColor()
-  var score: Int = 0
-  var orbsAbsorbed: Int = 0
+case class PlayerData(
+    uid: String,
+    playerName: String,
+    locX: Int,
+    locY: Int,
+    color: String,
+    radius: Int,
+    score: Int = 0,
+    orbsAbsorbed: Int = 0
+)
 
-  private def getRandomColor(): String = {
-    val r = scala.util.Random.nextInt(150) + 50
-    val g = scala.util.Random.nextInt(150) + 50
-    val b = scala.util.Random.nextInt(150) + 50
-    s"rgb($r,$g,$b)"
+object PlayerData {
+  def createPlayerData[F[_]: Sync](playerName: String): F[PlayerData] = {
+    for {
+      uid <- Sync[F].delay(java.util.UUID.randomUUID().toString)
+      locX <- Sync[F].delay(scala.util.Random.nextInt(worldWidth) + 100)
+      locY <- Sync[F].delay(scala.util.Random.nextInt(worldWidth) + 100)
+      color <- getRandomColor[F]
+      radius = defaultSize
+    } yield PlayerData(uid, playerName, locX, locY, color, radius)
+  }
+
+  def increaseScore(playerData: PlayerData): PlayerData = {
+    playerData.copy(score = playerData.score + 1)
+  }
+
+  def increaseOrbsAbsorbed(playerData: PlayerData): PlayerData = {
+    playerData.copy(orbsAbsorbed = playerData.orbsAbsorbed + 1)
+  }
+
+  private def getRandomColor[F[_]: Sync]: F[String] = {
+    for {
+      r <- Sync[F].delay(scala.util.Random.nextInt(150) + 50)
+      g <- Sync[F].delay(scala.util.Random.nextInt(150) + 50)
+      b <- Sync[F].delay(scala.util.Random.nextInt(150) + 50)
+    } yield s"rgb($r, $g, $b)"
   }
 }
 

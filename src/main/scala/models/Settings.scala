@@ -1,10 +1,11 @@
 package models
 
-case class Settings(
-    defaultOrbs: Int = 50,
-    defaultSpeed: Int = 6,
-    defaultSize: Int = 6,
-    defaultZoom: Double = 1.5,
-    worldWidth: Int = 1440,
-    worldHeight: Int = 1440
-)
+case object Settings {
+  val defaultOrbs: Int = 50
+  val defaultOrbRadius: Int = 5
+  val defaultSpeed: Int = 6
+  val defaultSize: Int = 6
+  val defaultZoom: Double = 1.5
+  val worldWidth: Int = 1440
+  val worldHeight: Int = 1440
+}

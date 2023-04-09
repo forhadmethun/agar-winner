@@ -1,7 +1,8 @@
 val projectVersion = "0.1.0"
-val scala3Version = "3.1.3"
+val scala3Version = "3.2.2"
 val Http4sVersion = "0.23.13"
-val CirceVersion = "0.14.2"
+val CirceVersion = "0.14.4"
+val log4CatsVersion = "2.5.0"
 val ScribeVersion = "3.10.0"
 
 lazy val root = (project in file("."))
@@ -17,7 +18,7 @@ lazy val root = (project in file("."))
       "io.circe" %% "circe-core" % CirceVersion,
       "io.circe" %% "circe-generic" % CirceVersion,
       "io.circe" %% "circe-parser" % CirceVersion,
-      "com.outr" %% "scribe" % ScribeVersion,
+      "org.typelevel" %% "log4cats-core" % log4CatsVersion,
       "com.outr" %% "scribe-slf4j" % ScribeVersion
     )
   )

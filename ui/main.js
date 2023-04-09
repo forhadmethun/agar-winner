@@ -87,7 +87,7 @@ const socket = new WebSocket('ws://localhost:8090');
 function init() {
     draw()
     socket.send(JSON.stringify({
-        type: 'init',
+        messageType: 'init',
         data: {
             playerName: player.name
         }
@@ -97,13 +97,13 @@ function init() {
 
 socket.addEventListener('message', (event) => {
     const message = JSON.parse(event.data);
-    switch (message.type) {
+    switch (message.messageType) {
         case 'initReturn':
             orbs = message.data.orbs
             // orbs = message.data
             // setInterval(() => {
             //     socket.send(JSON.stringify({
-            //         type: 'tick',
+            //         messageType: 'tick',
             //         data: {
             //             xVector: player.xVector,
             //             yVector: player.yVector

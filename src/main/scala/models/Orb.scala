@@ -1,28 +1,31 @@
 package models
 import io.circe.Codec
+import cats.effect.Sync
+import cats.syntax.all.*
+import cats.effect.unsafe.implicits.global
+import models.Settings._
 
 case class Orb(color: String, locX: Int, locY: Int, radius: Int)
     derives Codec.AsObject
 
 object Orb {
-  def apply(worldWidth: Int, worldHeight: Int): Orb = {
-    val color = getRandomColor()
-    val locX = scala.util.Random.nextInt(worldWidth)
-    val locY = scala.util.Random.nextInt(worldHeight)
-    val radius = 5
-    Orb(color, locX, locY, radius)
+  def apply[F[_]: Sync](worldWidth: Int, worldHeight: Int): F[Orb] = {
+    for {
+      color <- getRandomColor[F]
+      locX <- Sync[F].delay(scala.util.Random.nextInt(worldWidth))
+      locY <- Sync[F].delay(scala.util.Random.nextInt(worldHeight))
+    } yield Orb(color, locX, locY, defaultOrbRadius)
   }
 
-  private def getRandomColor(): String = {
-    val r = scala.util.Random.nextInt(151) + 50
-    val g = scala.util.Random.nextInt(151) + 50
-    val b = scala.util.Random.nextInt(151) + 50
-    s"rgb($r, $g, $b)"
+  private def getRandomColor[F[_]: Sync]: F[String] = {
+    for {
+      r <- Sync[F].delay(scala.util.Random.nextInt(151) + 50)
+      g <- Sync[F].delay(scala.util.Random.nextInt(151) + 50)
+      b <- Sync[F].delay(scala.util.Random.nextInt(151) + 50)
+    } yield s"rgb($r, $g, $b)"
   }
 
-  def generateOrbs(settings: Settings): List[Orb] = {
-    List.fill(settings.defaultOrbs)(
-      Orb(settings.worldWidth, settings.worldHeight)
-    )
+  def generateOrbs[F[_]: Sync]: F[Vector[Orb]] = {
+    Vector.fill(defaultOrbs)(Orb[F](worldWidth, worldHeight)).sequence
   }
 }

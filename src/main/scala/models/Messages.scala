@@ -1,18 +1,26 @@
 package models
 
+import cats.effect.Sync
+import cats.syntax.all._
 import io.circe._
-import io.circe.generic.semiauto._
 import io.circe.syntax.EncoderOps
 
-object Messages {
-  final case class InitMessageResponseData(orbs: List[Orb])
-      derives Codec.AsObject
-  final case class InitMessageResponse(
-      `type`: String,
-      data: InitMessageResponseData
-  ) derives Codec.AsObject
-  case class InitMessage(`type`: String, data: InitData)
-  case class InitData(playerName: String)
-  case class TickMessage(`type`: String, data: TickData)
-  case class TickData(xVector: Double, yVector: Double)
+sealed trait Response derives Codec.AsObject
+final case class InitMessageResponse(
+    messageType: String,
+    data: InitMessageResponseData
+) extends Response
+final case class InitMessageResponseData(orbs: Vector[Orb])
+
+object InitMessageResponseData {
+  def create[F[_]: Sync]: F[InitMessageResponseData] = {
+    Orb.generateOrbs[F].map(orbs => InitMessageResponseData(orbs))
+  }
 }
+
+sealed trait Request
+final case class InitMessage(messageType: String, data: InitData)
+    extends Request
+case class TickMessage(messageType: String, data: TickData) extends Request
+case class InitData(playerName: String)
+case class TickData(xVector: Double, yVector: Double)
