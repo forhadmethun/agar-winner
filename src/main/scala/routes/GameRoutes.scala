@@ -28,7 +28,7 @@ final class GameRoutes[F[_]](gameService: GameService[F], logger: Logger[F])
           .collect { case WebSocketFrame.Text(text, _) =>
             GameService.extractMessage(text)
           }
-          .foreach(gameService.publish)
+          .foreach(_.flatMap(gameService.publish))
       builder.build(out, in)
     }
 

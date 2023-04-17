@@ -19,13 +19,9 @@ final class GameService[F[_]](
   def subscribe: Stream[F, GameMessage] =
     Stream.eval(game).flatMap(_.subscribe)
 
-  def publish(msg: F[GameMessage])(using MonadThrow[F]): F[Unit] = {
-    for {
-      m <- msg
-      g <- game
-      _ <- g.publish(m)
-    } yield ()
-  }
+  def publish(m: GameMessage)(using MonadThrow[F]): F[Unit] =
+    game.flatMap(_.publish(m))
+
   protected def deamon(using Concurrent[F]): F[Unit] =
     game.flatMap(g => Spawn[F].start(g.deamon).void)
 
