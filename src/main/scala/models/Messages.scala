@@ -1,13 +1,15 @@
 package models
 
-import cats.effect.{IO, IOApp, Sync}
+import cats.effect.Sync
 import cats.syntax.all.*
 import io.circe.*
+import io.circe.derivation.{
+  Configuration,
+  ConfiguredDecoder,
+  ConfiguredEncoder,
+  ConfiguredEnumEncoder
+}
 import io.circe.syntax.EncoderOps
-import io.circe.derivation.Configuration
-import io.circe.derivation.ConfiguredEnumEncoder
-import io.circe.derivation.ConfiguredEncoder
-import io.circe.derivation.ConfiguredDecoder
 
 enum Request derives ConfiguredEncoder, ConfiguredDecoder:
   case InitMessage(data: InitData)
@@ -32,7 +34,10 @@ enum Response derives ConfiguredEncoder, ConfiguredDecoder:
 object Response:
   given Configuration = Configuration.default.withDiscriminator("_type")
 
-final case class InitMessageResponseData(orbs: Vector[Orb], playerData: PlayerData)
+final case class InitMessageResponseData(
+    orbs: Vector[Orb],
+    playerData: PlayerData
+)
 
 object InitMessageResponseData {
   def create[F[_]: Sync](playerData: PlayerData): F[InitMessageResponseData] = {
