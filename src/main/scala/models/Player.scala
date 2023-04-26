@@ -4,19 +4,27 @@ import cats.effect.IO
 import cats.effect.Sync
 import cats.syntax.all.*
 import cats.effect.unsafe.implicits.global
-import models.Settings._
-case class PlayerConfig(defaultSpeed: Int, defaultZoom: Double)
+import io.circe.Codec
+import models.Settings.*
+
+case class PlayerConfig
+(
+  xVector: Double = 0,
+  yVector: Double = 0,
+  speed: Double,
+  zoom: Double
+)
 
 case class PlayerData(
     uid: String,
     playerName: String,
-    locX: Int,
-    locY: Int,
+    locX: Double,
+    locY: Double,
     color: String,
     radius: Int,
     score: Int = 0,
     orbsAbsorbed: Int = 0
-)
+) derives Codec.AsObject
 
 object PlayerData {
   def createPlayerData[F[_]: Sync](playerName: String): F[PlayerData] = {
@@ -46,4 +54,5 @@ object PlayerData {
   }
 }
 
-case class Player(playerConfig: PlayerConfig, playerData: PlayerData)
+case class Player[F[_]](playerConfig: PlayerConfig, playerData: PlayerData):
+  def getData: PlayerData = playerData

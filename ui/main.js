@@ -75,6 +75,29 @@ function resetTransform() {
     context.setTransform(1, 0, 0, 1, 0, 0);
 }
 
+canvas.addEventListener('mousemove', (event) => {
+    const mousePosition = {
+        x: event.clientX,
+        y: event.clientY
+    };
+    let xVector, yVector;
+    const angleDeg = Math.atan2(mousePosition.y - (canvas.height / 2), mousePosition.x - (canvas.width / 2)) * 180 / Math.PI;
+    if (angleDeg >= 0 && angleDeg < 90) {
+        xVector = 1 - (angleDeg / 90);
+        yVector = -(angleDeg / 90);
+    } else if (angleDeg >= 90 && angleDeg <= 180) {
+        xVector = -(angleDeg - 90) / 90;
+        yVector = -(1 - ((angleDeg - 90) / 90));
+    } else if (angleDeg >= -180 && angleDeg < -90) {
+        xVector = (angleDeg + 90) / 90;
+        yVector = (1 + ((angleDeg + 90) / 90));
+    } else if (angleDeg < 0 && angleDeg >= -90) {
+        xVector = (angleDeg + 90) / 90;
+        yVector = (1 - ((angleDeg + 90) / 90));
+    }
+    player.xVector = xVector;
+    player.yVector = yVector;
+})
 
 // Websocket
 
@@ -87,7 +110,7 @@ const socket = new WebSocket('ws://localhost:8090');
 function init() {
     draw()
     socket.send(JSON.stringify({
-        messageType: 'init',
+        _type: 'InitMessage',
         data: {
             playerName: player.name
         }
@@ -100,20 +123,21 @@ socket.addEventListener('message', (event) => {
     switch (message.messageType) {
         case 'initReturn':
             orbs = message.data.orbs
-            // orbs = message.data
-            // setInterval(() => {
-            //     socket.send(JSON.stringify({
-            //         messageType: 'tick',
-            //         data: {
-            //             xVector: player.xVector,
-            //             yVector: player.yVector
-            //         }
-            //     }));
-            // }, 33);
+            player = {...player, ...message.data.playerData}
+            setInterval(() => {
+                if(player.uid) socket.send(JSON.stringify({
+                    _type: 'TickMessage',
+                    data: {
+                        uid: player.uid,
+                        xVector: player.xVector || 0,
+                        yVector: player.yVector || 0
+                    }
+                }));
+            }, 33);
             break;
         case 'tock':
             // console.log(message.data)
-            players = message.data.players;
+            players = message.data; //.players;
             break;
         case 'tickTock':
             // console.log(message.data)
