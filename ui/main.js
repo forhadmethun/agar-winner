@@ -35,6 +35,7 @@ function draw() {
     resetTransform();
     clearScreen();
     clampCamera();
+    drawCurrentPlayer();
     drawPlayers();
     drawOrbs();
     requestAnimationFrame(draw);
@@ -50,8 +51,18 @@ function clampCamera() {
     context.translate(camX, camY);
 }
 
+function drawCurrentPlayer() {
+    context.beginPath();
+    context.fillStyle = player.color
+    context.arc(player.locX, player.locY, player.radius, 0, Math.PI * 2);
+    context.fill();
+    context.lineWidth = 3;
+    context.strokeStyle = 'rgb(0,255,0)';
+    context.stroke();
+}
+
 function drawPlayers() {
-    players.forEach((p) => {
+    players.filter(x => x.uid !== player.uid).forEach((p) => {
         context.beginPath();
         context.fillStyle = p.color;
         context.arc(p.locX, p.locY, p.radius, 0, Math.PI * 2);
@@ -75,6 +86,29 @@ function resetTransform() {
     context.setTransform(1, 0, 0, 1, 0, 0);
 }
 
+canvas.addEventListener('mousemove', (event) => {
+    const mousePosition = {
+        x: event.clientX,
+        y: event.clientY
+    };
+    let xVector, yVector;
+    const angleDeg = Math.atan2(mousePosition.y - (canvas.height / 2), mousePosition.x - (canvas.width / 2)) * 180 / Math.PI;
+    if (angleDeg >= 0 && angleDeg < 90) {
+        xVector = 1 - (angleDeg / 90);
+        yVector = -(angleDeg / 90);
+    } else if (angleDeg >= 90 && angleDeg <= 180) {
+        xVector = -(angleDeg - 90) / 90;
+        yVector = -(1 - ((angleDeg - 90) / 90));
+    } else if (angleDeg >= -180 && angleDeg < -90) {
+        xVector = (angleDeg + 90) / 90;
+        yVector = (1 + ((angleDeg + 90) / 90));
+    } else if (angleDeg < 0 && angleDeg >= -90) {
+        xVector = (angleDeg + 90) / 90;
+        yVector = (1 - ((angleDeg + 90) / 90));
+    }
+    player.xVector = xVector;
+    player.yVector = yVector;
+})
 
 // Websocket
 
@@ -87,38 +121,37 @@ const socket = new WebSocket('ws://localhost:8090');
 function init() {
     draw()
     socket.send(JSON.stringify({
-        messageType: 'init',
+        _type: 'InitMessage',
         data: {
             playerName: player.name
         }
     }));
 }
 
-
+let c = 0
 socket.addEventListener('message', (event) => {
     const message = JSON.parse(event.data);
-    switch (message.messageType) {
-        case 'initReturn':
+    switch (message && message._type) {
+        case 'InitMessageResponse':
             orbs = message.data.orbs
-            // orbs = message.data
-            // setInterval(() => {
-            //     socket.send(JSON.stringify({
-            //         messageType: 'tick',
-            //         data: {
-            //             xVector: player.xVector,
-            //             yVector: player.yVector
-            //         }
-            //     }));
-            // }, 33);
+            player = {...player, ...message.data.playerData}
+            setInterval(() => {
+                if(player.uid && player.xVector) socket.send(JSON.stringify({
+                    _type: 'TickMessage',
+                    data: {
+                        uid: player.uid,
+                        xVector: player.xVector || 0,
+                        yVector: player.yVector || 0
+                    }
+                }));
+            }, 33);
             break;
-        case 'tock':
-            // console.log(message.data)
-            players = message.data.players;
+        case 'PlayerListMessageResponse':
+            players = message.data;
             break;
-        case 'tickTock':
-            // console.log(message.data)
-            player.locX = message.data.playerX;
-            player.locY = message.data.playerY;
+        case 'TickMessageResponse':
+            player.locX = message.data.locX;
+            player.locY = message.data.locY;
             break;
 
     }

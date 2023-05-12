@@ -1,26 +1,41 @@
 package models
 
 import cats.effect.Sync
-import cats.syntax.all._
-import io.circe._
+import cats.syntax.all.*
+import io.circe.*
+import io.circe.derivation.{
+  Configuration,
+  ConfiguredDecoder,
+  ConfiguredEncoder,
+  ConfiguredEnumEncoder
+}
 import io.circe.syntax.EncoderOps
 
-sealed trait Response derives Codec.AsObject
-final case class InitMessageResponse(
-    messageType: String,
-    data: InitMessageResponseData
-) extends Response
-final case class InitMessageResponseData(orbs: Vector[Orb])
+enum Request derives ConfiguredDecoder:
+  case InitMessage(data: InitData)
+  case TickMessage(data: TickData)
+
+object Request:
+  given Configuration = Configuration.default.withDiscriminator("_type")
+
+case class InitData(playerName: String)
+case class TickData(uid: String, xVector: Double, yVector: Double)
+
+enum Response derives ConfiguredEncoder:
+  case InitMessageResponse(data: InitMessageResponseData)
+  case PlayerListMessageResponse(data: Vector[PlayerData])
+  case TickMessageResponse(data: PlayerData)
+
+object Response:
+  given Configuration = Configuration.default.withDiscriminator("_type")
+
+final case class InitMessageResponseData(
+    orbs: Vector[Orb],
+    playerData: PlayerData
+)
 
 object InitMessageResponseData {
-  def create[F[_]: Sync]: F[InitMessageResponseData] = {
-    Orb.generateOrbs[F].map(orbs => InitMessageResponseData(orbs))
+  def create[F[_]: Sync](playerData: PlayerData): F[InitMessageResponseData] = {
+    Orb.generateOrbs[F].map(orbs => InitMessageResponseData(orbs, playerData))
   }
 }
-
-sealed trait Request
-final case class InitMessage(messageType: String, data: InitData)
-    extends Request
-case class TickMessage(messageType: String, data: TickData) extends Request
-case class InitData(playerName: String)
-case class TickData(xVector: Double, yVector: Double)
