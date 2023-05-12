@@ -49,11 +49,7 @@ final class GameService[F[_]](
       msg <- InitMessageResponseData
         .create[F](playerData)
         .map(data =>
-          val initMsgResponse: Response = Response.InitMessageResponse("initReturn", data)
-          GameMessage(
-            "id",
-            initMsgResponse.asJson.toString
-          )
+          GameMessage(Response.InitMessageResponse(data).asInstanceOf[Response].asJson.toString)
         )
     } yield msg
   }
@@ -75,12 +71,8 @@ final class GameService[F[_]](
 
       pData = player.playerData.copy(locX = newLocX, locY = newLocY)
       _ <- playerService.createPlayer(pConfig, pData)
-      msg <- Sync[F].pure(
-        GameMessage(
-          "id",
-          s"{xVector: ${tickMsg.data.xVector}, yVector: ${tickMsg.data.yVector}}"
-        )
-      )
+      msg <- Sync[F].pure(GameMessage(
+        Response.TickMessageResponse(pData).asInstanceOf[Response].asJson.toString))
     } yield msg
   }
 
@@ -89,9 +81,9 @@ final class GameService[F[_]](
       .awakeEvery[F](33.milliseconds)
       .flatMap(_ => Stream.eval(playerService.getAllPlayers))
       .map(players => {
-        val playerListResponse: Response = Response.PlayerListMessageResponse("tock", players.map(q => q.getData))
         Sync[F]
-          .pure(WebSocketFrame.Text(playerListResponse.asJson.toString))
+          .pure(WebSocketFrame.Text(Response.PlayerListMessageResponse(
+            players.map(q => q.getData)).asInstanceOf[Response].asJson.toString))
       })
 
 object GameService:
@@ -127,4 +119,4 @@ object Game:
       topic <- Topic[F, GameMessage]
     yield Game(topic, q)
 
-final case class GameMessage(id: String, content: String)
+final case class GameMessage(content: String)

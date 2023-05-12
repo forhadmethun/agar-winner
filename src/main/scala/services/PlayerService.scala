@@ -8,7 +8,7 @@ import cats.syntax.all.*
 import fs2.concurrent.Topic
 import io.circe.*
 import fs2.*
-import repository.{PlayerRepository, RoomsRepistory}
+import repository.PlayerRepository
 import models.{Player, PlayerConfig, PlayerData}
 
 final class PlayerService[F[_]](

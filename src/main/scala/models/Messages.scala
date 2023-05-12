@@ -11,7 +11,7 @@ import io.circe.derivation.{
 }
 import io.circe.syntax.EncoderOps
 
-enum Request derives ConfiguredEncoder, ConfiguredDecoder:
+enum Request derives ConfiguredDecoder:
   case InitMessage(data: InitData)
   case TickMessage(data: TickData)
 
@@ -21,15 +21,10 @@ object Request:
 case class InitData(playerName: String)
 case class TickData(uid: String, xVector: Double, yVector: Double)
 
-enum Response derives ConfiguredEncoder, ConfiguredDecoder:
-  case InitMessageResponse(
-      messageType: String,
-      data: InitMessageResponseData
-  )
-  case PlayerListMessageResponse(
-      messageType: String,
-      data: Vector[PlayerData]
-  )
+enum Response derives ConfiguredEncoder:
+  case InitMessageResponse(data: InitMessageResponseData)
+  case PlayerListMessageResponse(data: Vector[PlayerData])
+  case TickMessageResponse(data: PlayerData)
 
 object Response:
   given Configuration = Configuration.default.withDiscriminator("_type")

@@ -35,6 +35,7 @@ function draw() {
     resetTransform();
     clearScreen();
     clampCamera();
+    drawCurrentPlayer();
     drawPlayers();
     drawOrbs();
     requestAnimationFrame(draw);
@@ -50,8 +51,18 @@ function clampCamera() {
     context.translate(camX, camY);
 }
 
+function drawCurrentPlayer() {
+    context.beginPath();
+    context.fillStyle = player.color
+    context.arc(player.locX, player.locY, player.radius, 0, Math.PI * 2);
+    context.fill();
+    context.lineWidth = 3;
+    context.strokeStyle = 'rgb(0,255,0)';
+    context.stroke();
+}
+
 function drawPlayers() {
-    players.forEach((p) => {
+    players.filter(x => x.uid !== player.uid).forEach((p) => {
         context.beginPath();
         context.fillStyle = p.color;
         context.arc(p.locX, p.locY, p.radius, 0, Math.PI * 2);
@@ -117,15 +128,15 @@ function init() {
     }));
 }
 
-
+let c = 0
 socket.addEventListener('message', (event) => {
     const message = JSON.parse(event.data);
-    switch (message.messageType) {
-        case 'initReturn':
+    switch (message && message._type) {
+        case 'InitMessageResponse':
             orbs = message.data.orbs
             player = {...player, ...message.data.playerData}
             setInterval(() => {
-                if(player.uid) socket.send(JSON.stringify({
+                if(player.uid && player.xVector) socket.send(JSON.stringify({
                     _type: 'TickMessage',
                     data: {
                         uid: player.uid,
@@ -135,14 +146,12 @@ socket.addEventListener('message', (event) => {
                 }));
             }, 33);
             break;
-        case 'tock':
-            // console.log(message.data)
-            players = message.data; //.players;
+        case 'PlayerListMessageResponse':
+            players = message.data;
             break;
-        case 'tickTock':
-            // console.log(message.data)
-            player.locX = message.data.playerX;
-            player.locY = message.data.playerY;
+        case 'TickMessageResponse':
+            player.locX = message.data.locX;
+            player.locY = message.data.locY;
             break;
 
     }
