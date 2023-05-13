@@ -25,7 +25,7 @@ final class PlayerService[F[_]](
           .fromOption(_, new IllegalArgumentException(s"No player found with id: $uid "))
       )
 
-  def createPlayer(playerConfig: PlayerConfig, playerData: PlayerData)(using Concurrent[F]): F[Player[F]] = {
+  def savePlayer(playerConfig: PlayerConfig, playerData: PlayerData)(using Concurrent[F]): F[Player[F]] = {
     val player = Player[F](playerConfig, playerData)
     for _ <- repo.update(player)
       yield player

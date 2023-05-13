@@ -15,13 +15,24 @@ case class PlayerConfig
   zoom: Double
 )
 
+object PlayerConfig {
+  def updatePlayerConfig(playerConfig: PlayerConfig): PlayerConfig = {
+    playerConfig.copy(
+      zoom = if (playerConfig.zoom > zoomThreshold) playerConfig.zoom - zoomValueChange else playerConfig.zoom,
+      speed = if (playerConfig.speed < -speedThreshold) playerConfig.speed + speedValueChange
+      else if (playerConfig.speed > speedThreshold) playerConfig.speed - speedValueChange
+      else playerConfig.speed
+    )
+  }
+}
+
 case class PlayerData(
     uid: String,
     playerName: String,
     locX: Double,
     locY: Double,
     color: String,
-    radius: Int,
+    radius: Double,
     score: Int = 0,
     orbsAbsorbed: Int = 0
 ) derives Codec.AsObject
@@ -51,6 +62,14 @@ object PlayerData {
       g <- Sync[F].delay(scala.util.Random.nextInt(150) + 50)
       b <- Sync[F].delay(scala.util.Random.nextInt(150) + 50)
     } yield s"rgb($r, $g, $b)"
+  }
+
+  def updatePlayerData(playerData: PlayerData): PlayerData = {
+    playerData.copy(
+      score = playerData.score + 1,
+      orbsAbsorbed = playerData.orbsAbsorbed + 1,
+      radius = playerData.radius + radiusValueChange
+    )
   }
 }
 

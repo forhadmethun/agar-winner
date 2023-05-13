@@ -82,6 +82,18 @@ function drawOrbs() {
     });
 }
 
+function updatePlayerScore() {
+    $('.player-score').text(player.score || 0);
+}
+
+function updateLeaderBoard() {
+    $('.leader-board').empty();
+    players.sort((a, b) => b.score - a.score).forEach(player => {
+        const playerItem = $('<li class="leaderboard-player">').text(`${player.playerName}: ${player.score}`);
+        $('.leader-board').append(playerItem);
+    });
+}
+
 function resetTransform() {
     context.setTransform(1, 0, 0, 1, 0, 0);
 }
@@ -128,7 +140,6 @@ function init() {
     }));
 }
 
-let c = 0
 socket.addEventListener('message', (event) => {
     const message = JSON.parse(event.data);
     switch (message && message._type) {
@@ -148,11 +159,12 @@ socket.addEventListener('message', (event) => {
             break;
         case 'PlayerListMessageResponse':
             players = message.data;
+            updateLeaderBoard();
             break;
         case 'TickMessageResponse':
-            player.locX = message.data.locX;
-            player.locY = message.data.locY;
+            player = {...player, ...message.data.playerData};
+            orbs = message.data.orbs;
+            updatePlayerScore();
             break;
-
     }
 });
