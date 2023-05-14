@@ -48,12 +48,9 @@ final class GameService[F[_]](
       playerData <- PlayerData.createPlayerData[F](initMsg.data.playerName, initMsg.data.sid)
       playerConfig = PlayerConfig(speed = defaultSpeed, zoom = defaultZoom)
       orbs <- orbService.getAllOrbs
-      _ <- playerService.savePlayer(
-        playerConfig,
-        playerData
-      )
+      _ <- playerService.savePlayer(playerConfig, playerData)
       msg <- InitMessageResponseData
-        .create[F](orbs.map(o => o.getData), playerData)
+        .create[F](orbs.map(_.getData), playerData)
         .map(data =>
           GameMessage(Response.InitMessageResponse(data).asInstanceOf[Response].asJson.toString)
         )
@@ -125,7 +122,7 @@ final class GameService[F[_]](
       .map(players => {
         Sync[F]
           .pure(WebSocketFrame.Text(Response.PlayerListMessageResponse(
-            players.map(q => q.getData)).asInstanceOf[Response].asJson.toString))
+            players.map(_.getData)).asInstanceOf[Response].asJson.toString))
       })
 
 object GameService:
