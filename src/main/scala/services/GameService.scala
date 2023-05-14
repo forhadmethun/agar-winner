@@ -109,26 +109,12 @@ final class GameService[F[_]](
   private def handleCollisionPlayer(collisionPlayerOpt: Option[PlayerData], player: Player[F])(using Async[F]): F[Option[Unit]] = {
     collisionPlayerOpt match {
       case Some(collisionPlayer) if player.playerData.radius > collisionPlayer.radius =>
-//        println("--> collission")
-//        println("--> collisionPlayerOpt: "+ collisionPlayer)
-//        println("--> player: "+ player.playerData)
-//        if (player.playerData.radius > collisionPlayer.radius) {
-          println("--> player.playerData: " + player.playerData)
-          println("--> collisionPlayer: " + collisionPlayer)
-          val updatedPlayerData = updatePlayerData(player.playerData)
-          println("--> updated: " + updatedPlayerData.uid)
-          println("--> deleted: " + collisionPlayer.uid)
-          val updatedPConfig = updatePlayerConfig(player.playerConfig)
-          for {
-            _ <- playerService.deletePlayer(collisionPlayer.uid)
-            _ = println("mf: " + updatedPlayerData)
-//            _ = println("mf: " + p.playerData)
-//            _ = println("saved: " + updatedPlayerData)
-            _ = println("deleteed: " + collisionPlayer.uid)
-            _ <- playerService.savePlayer(updatedPConfig, updatedPlayerData)
-          } yield Some(())
-//        }
-//        Async[F].pure(None)
+        val updatedPlayerData = updatePlayerData(player.playerData)
+        val updatedPConfig = updatePlayerConfig(player.playerConfig)
+        for {
+          _ <- playerService.deletePlayer(collisionPlayer.uid)
+          _ <- playerService.savePlayer(updatedPConfig, updatedPlayerData)
+        } yield Some(())
       case None => Async[F].pure(None)
     }
   }
