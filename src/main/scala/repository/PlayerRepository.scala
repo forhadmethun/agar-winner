@@ -14,6 +14,7 @@ trait PlayerRepository[F[_]]:
   def get(uid: String): F[Option[Player[F]]]
   def getAll: F[Vector[Player[F]]]
   def update(player: Player[F]): F[Unit]
+  def delete(uid: String): F[Unit]
 
 object PlayerRepository:
   def inMemory[F[_]: Sync]: F[PlayerRepository[F]] =
@@ -26,4 +27,6 @@ object PlayerRepository:
           ref.update(
             _.filterNot(_.playerData.uid == player.playerData.uid) :+ player
           )
+        def delete(uid: String): F[Unit] =
+          ref.update(_.filterNot(_.playerData.uid == uid))
     }

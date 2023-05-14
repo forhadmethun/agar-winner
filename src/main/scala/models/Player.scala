@@ -28,6 +28,7 @@ object PlayerConfig {
 
 case class PlayerData(
     uid: String,
+    sid: String,
     playerName: String,
     locX: Double,
     locY: Double,
@@ -35,17 +36,17 @@ case class PlayerData(
     radius: Double,
     score: Int = 0,
     orbsAbsorbed: Int = 0
-) derives Codec.AsObject
+) extends CircularShape derives Codec.AsObject
 
 object PlayerData {
-  def createPlayerData[F[_]: Sync](playerName: String): F[PlayerData] = {
+  def createPlayerData[F[_]: Sync](playerName: String, sid: String): F[PlayerData] = {
     for {
       uid <- Sync[F].delay(java.util.UUID.randomUUID().toString)
       locX <- Sync[F].delay(scala.util.Random.nextInt(worldWidth) + 100)
       locY <- Sync[F].delay(scala.util.Random.nextInt(worldWidth) + 100)
       color <- getRandomColor[F]
       radius = defaultSize
-    } yield PlayerData(uid, playerName, locX, locY, color, radius)
+    } yield PlayerData(uid, sid, playerName, locX, locY, color, radius)
   }
 
   def increaseScore(playerData: PlayerData): PlayerData = {

@@ -5,8 +5,8 @@ import cats.syntax.all.*
 import cats.effect.unsafe.implicits.global
 import models.Settings._
 
-case class OrbData(uid: String, color: String, locX: Int, locY: Int, radius: Int)
-    derives Codec.AsObject
+case class OrbData(uid: String, color: String, locX: Double, locY: Double, radius: Double)
+  extends CircularShape derives Codec.AsObject
 
 object OrbData {
   def apply[F[_]: Sync](): F[OrbData] = {

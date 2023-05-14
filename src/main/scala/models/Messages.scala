@@ -18,7 +18,7 @@ enum Request derives ConfiguredDecoder:
 object Request:
   given Configuration = Configuration.default.withDiscriminator("_type")
 
-case class InitData(playerName: String)
+case class InitData(playerName: String, sid: String)
 case class TickData(uid: String, xVector: Double, yVector: Double)
 
 enum Response derives ConfiguredEncoder:

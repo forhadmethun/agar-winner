@@ -31,6 +31,9 @@ final class PlayerService[F[_]](
       yield player
   }
 
+  def deletePlayer(uid: String)(using Concurrent[F]): F[Unit] =
+    repo.delete(uid)
+
 
 object PlayerService:
   def create[F[_]: Async]: F[PlayerService[F]] =

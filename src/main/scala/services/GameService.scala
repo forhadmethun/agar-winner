@@ -45,7 +45,7 @@ final class GameService[F[_]](
 
   private def processInitMessage(initMsg: Request with Request.InitMessage)(using Async[F]) = {
     for {
-      playerData <- PlayerData.createPlayerData[F](initMsg.data.playerName)
+      playerData <- PlayerData.createPlayerData[F](initMsg.data.playerName, initMsg.data.sid)
       playerConfig = PlayerConfig(speed = defaultSpeed, zoom = defaultZoom)
       orbs <- orbService.getAllOrbs
       _ <- playerService.savePlayer(
@@ -69,6 +69,7 @@ final class GameService[F[_]](
       oData <- orbService.getAllOrbs
       _ <- playerService.savePlayer(pConfig, pData)
       _ <- checkForCollision(pData.uid)
+      _ <- checkForPlayerCollisions(pData.uid)
       msg <- Sync[F].pure(GameMessage(
         Response.TickMessageResponse(TickMessageResponseData(pData, oData.map(_.getData)))
           .asInstanceOf[Response].asJson.toString))
@@ -83,6 +84,15 @@ final class GameService[F[_]](
       result <- handleCollisionOrb(collisionOrbOpt, player)
     } yield result
   }
+  private def checkForPlayerCollisions(uid: String)(using Async[F]) = {
+    for {
+      player <- playerService.getPlayer(uid)
+      players <- playerService.getAllPlayers
+      collisionOrbOpt <- Async[F].pure(players.map(_.playerData).filter(_.uid != uid)
+        .find(isOrbCollidingWithPlayer(player.playerData, _)))
+      result <- handleCollisionPlayer(collisionOrbOpt, player)
+    } yield result
+  }
   private def handleCollisionOrb(collisionOrbOpt: Option[OrbData], player: Player[F])(using Async[F]): F[Option[Unit]] = {
     collisionOrbOpt match {
       case Some(collisionOrb) =>
@@ -93,6 +103,32 @@ final class GameService[F[_]](
           _ <- orbService.saveOrb(updatedOrb)
           _ <- playerService.savePlayer(updatedPConfig, updatedPlayerData)
         } yield Some(())
+      case None => Async[F].pure(None)
+    }
+  }
+  private def handleCollisionPlayer(collisionPlayerOpt: Option[PlayerData], player: Player[F])(using Async[F]): F[Option[Unit]] = {
+    collisionPlayerOpt match {
+      case Some(collisionPlayer) if player.playerData.radius > collisionPlayer.radius =>
+//        println("--> collission")
+//        println("--> collisionPlayerOpt: "+ collisionPlayer)
+//        println("--> player: "+ player.playerData)
+//        if (player.playerData.radius > collisionPlayer.radius) {
+          println("--> player.playerData: " + player.playerData)
+          println("--> collisionPlayer: " + collisionPlayer)
+          val updatedPlayerData = updatePlayerData(player.playerData)
+          println("--> updated: " + updatedPlayerData.uid)
+          println("--> deleted: " + collisionPlayer.uid)
+          val updatedPConfig = updatePlayerConfig(player.playerConfig)
+          for {
+            _ <- playerService.deletePlayer(collisionPlayer.uid)
+            _ = println("mf: " + updatedPlayerData)
+//            _ = println("mf: " + p.playerData)
+//            _ = println("saved: " + updatedPlayerData)
+            _ = println("deleteed: " + collisionPlayer.uid)
+            _ <- playerService.savePlayer(updatedPConfig, updatedPlayerData)
+          } yield Some(())
+//        }
+//        Async[F].pure(None)
       case None => Async[F].pure(None)
     }
   }
@@ -140,19 +176,19 @@ object GameService:
 
     (newLocX, newLocY)
   }
-  def isOrbCollidingWithPlayer(pData: PlayerData, orb: OrbData): Boolean = {
-    isAABBTestPassing(pData, orb) && isPythagorasTestPassing(pData, orb)
+  def isOrbCollidingWithPlayer(pData: PlayerData, collider: CircularShape): Boolean = {
+    isAABBTestPassing(pData, collider) && isPythagorasTestPassing(pData, collider)
   }
-  def isAABBTestPassing(pData: PlayerData, orb: OrbData): Boolean = {
-    pData.locX + pData.radius + orb.radius > orb.locX &&
-      pData.locX < orb.locX + pData.radius + orb.radius &&
-      pData.locY + pData.radius + orb.radius > orb.locY &&
-      pData.locY < orb.locY + pData.radius + orb.radius
+  def isAABBTestPassing(pData: PlayerData, collider: CircularShape): Boolean = {
+    pData.locX + pData.radius + collider.radius > collider.locX &&
+      pData.locX < collider.locX + pData.radius + collider.radius &&
+      pData.locY + pData.radius + collider.radius > collider.locY &&
+      pData.locY < collider.locY + pData.radius + collider.radius
   }
-  def isPythagorasTestPassing(pData: PlayerData, orb: OrbData): Boolean = {
-    val distanceSquared = math.pow(pData.locX - orb.locX, 2) +
-      math.pow(pData.locY - orb.locY, 2)
-    val radiusSumSquared = math.pow(pData.radius + orb.radius, 2)
+  def isPythagorasTestPassing(pData: PlayerData, collider: CircularShape): Boolean = {
+    val distanceSquared = math.pow(pData.locX - collider.locX, 2) +
+      math.pow(pData.locY - collider.locY, 2)
+    val radiusSumSquared = math.pow(pData.radius + collider.radius, 2)
     distanceSquared < radiusSumSquared
   }
 

@@ -132,12 +132,19 @@ const socket = new WebSocket('ws://localhost:8090');
 
 function init() {
     draw()
+    const sid =  generateSessionId()
+    player = { ...player, sid }
     socket.send(JSON.stringify({
         _type: 'InitMessage',
         data: {
-            playerName: player.name
+            playerName: player.name,
+            sid
         }
     }));
+}
+
+function generateSessionId() {
+    return Date.now().toString(36) + Math.random().toString(36).substring(2)
 }
 
 socket.addEventListener('message', (event) => {
@@ -145,26 +152,35 @@ socket.addEventListener('message', (event) => {
     switch (message && message._type) {
         case 'InitMessageResponse':
             orbs = message.data.orbs
-            player = {...player, ...message.data.playerData}
-            setInterval(() => {
-                if(player.uid && player.xVector) socket.send(JSON.stringify({
-                    _type: 'TickMessage',
-                    data: {
-                        uid: player.uid,
-                        xVector: player.xVector || 0,
-                        yVector: player.yVector || 0
-                    }
-                }));
-            }, 33);
+            if (player.sid === message.data.playerData.sid) {
+                player = {...player, ...message.data.playerData}
+                setInterval(() => {
+                    if (socket.readyState === WebSocket.OPEN && player.uid && player.xVector) socket.send(JSON.stringify({
+                        _type: 'TickMessage',
+                        data: {
+                            uid: player.uid,
+                            xVector: player.xVector || 0,
+                            yVector: player.yVector || 0
+                        }
+                    }));
+                }, 33);
+            }
             break;
         case 'PlayerListMessageResponse':
             players = message.data;
             updateLeaderBoard();
             break;
         case 'TickMessageResponse':
-            player = {...player, ...message.data.playerData};
-            orbs = message.data.orbs;
-            updatePlayerScore();
+            if(player.sid === message.data.playerData.sid) {
+                player = {...player, ...message.data.playerData};
+                orbs = message.data.orbs;
+                updatePlayerScore();
+            }
             break;
     }
 });
+
+socket.onclose = function (e) {
+    console.log('WebSocket closed with code:', e.code);
+    console.log('Reason:', e.reason);
+}
