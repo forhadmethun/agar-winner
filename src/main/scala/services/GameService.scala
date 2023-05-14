@@ -115,7 +115,7 @@ final class GameService[F[_]](
           _ <- playerService.deletePlayer(collisionPlayer.uid)
           _ <- playerService.savePlayer(updatedPConfig, updatedPlayerData)
         } yield Some(())
-      case None => Async[F].pure(None)
+      case _ => Async[F].pure(None)
     }
   }
   def playerListStream(using Async[F]): Stream[F, F[WebSocketFrame]] =
