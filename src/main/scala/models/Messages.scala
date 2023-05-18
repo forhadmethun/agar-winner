@@ -11,6 +11,8 @@ import io.circe.derivation.{
 }
 import io.circe.syntax.EncoderOps
 
+final case class GameMessage(content: String)
+
 enum Request derives ConfiguredDecoder:
   case InitMessage(data: InitData)
   case TickMessage(data: TickData)

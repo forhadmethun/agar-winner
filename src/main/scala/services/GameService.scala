@@ -10,6 +10,7 @@ import fs2.concurrent.Topic
 import io.circe.parser.*
 import io.circe.syntax.*
 import fs2.{Stream, *}
+import manager.GameServer
 import models.*
 import models.OrbData.*
 import models.PlayerData.*
@@ -20,7 +21,7 @@ import services.GameService.*
 import scala.concurrent.duration.*
 
 final class GameService[F[_]](
-    val game: F[Game[F]],
+    val game: F[GameServer[F]],
     val playerService: PlayerService[F],
     val orbService: OrbService[F]
 ):
@@ -31,7 +32,7 @@ final class GameService[F[_]](
     game.flatMap(_.publish(m))
 
   protected def deamon(using Concurrent[F]): F[Unit] =
-    game.flatMap(g => Spawn[F].start(g.deamon).void)
+    game.flatMap(g => Spawn[F].start(g.daemon).void)
 
   def extractMessage(text: String)(using Async[F]): F[GameMessage] = {
     for {
@@ -65,31 +66,28 @@ final class GameService[F[_]](
       pData = player.playerData.copy(locX = newLocX, locY = newLocY)
       oData <- orbService.getAllOrbs
       _ <- playerService.savePlayer(pConfig, pData)
-      _ <- checkForCollision(pData.uid)
+      _ <- checkForOrbCollision(pData.uid)
       _ <- checkForPlayerCollisions(pData.uid)
-      msg <- Sync[F].pure(GameMessage(
-        Response.TickMessageResponse(TickMessageResponseData(pData, oData.map(_.orbData)))
-          .asInstanceOf[Response].asJson.toString))
+      msg = GameMessage(Response.TickMessageResponse(TickMessageResponseData(pData, oData.map(_.orbData)))
+        .asInstanceOf[Response].asJson.toString)
     } yield msg
   }
-  private def checkForCollision(uid: String)(using Async[F]) = {
+  private def checkForOrbCollision(uid: String)(using Async[F]) = {
     for {
       player <- playerService.getPlayer(uid)
       orbs <- orbService.getAllOrbs
-      collisionOrbOpt <- Async[F].pure(orbs.map(_.orbData)
-        .find(orb => isOrbCollidingWithPlayer(player.playerData, orb)))
+      collisionOrbOpt = orbs.map(_.orbData)
+        .find(orb => isOrbCollidingWithPlayer(player.playerData, orb))
       result <- handleCollisionOrb(collisionOrbOpt, player)
     } yield result
   }
-  private def checkForPlayerCollisions(uid: String)(using Async[F]) = {
-    for {
+  private def checkForPlayerCollisions(uid: String)(using Async[F]) = for {
       player <- playerService.getPlayer(uid)
       players <- playerService.getAllPlayers
-      collisionPlayerOpt <- Async[F].pure(players.filter(_.playerData.uid != uid)
-        .find(p => isOrbCollidingWithPlayer(player.playerData, p.playerData)))
-      result <- handleCollisionPlayer(collisionPlayerOpt, player)
-    } yield result
-  }
+      collisionPlayerOpt = players.filter(_.playerData.uid != uid)
+        .find(p => isOrbCollidingWithPlayer(player.playerData, p.playerData))
+      _ <- handleCollisionPlayer(collisionPlayerOpt, player)
+    } yield ()
   private def handleCollisionOrb(collisionOrbOpt: Option[OrbData], player: Player[F])(using Async[F]): F[Option[Unit]] = {
     collisionOrbOpt match {
       case Some(collisionOrb) =>
@@ -133,7 +131,7 @@ final class GameService[F[_]](
 object GameService:
   def create[F[_]: Async]: F[GameService[F]] =
     for
-      game <- Game.create[F]
+      game <- GameServer.create[F]
       players <- PlayerService.create[F]
       orbs <- OrbService.create[F]
       service = GameService(Async[F].pure(game), players, orbs)
@@ -179,29 +177,3 @@ object GameService:
     val radiusSumSquared = math.pow(pData.radius + collider.radius, 2)
     distanceSquared < radiusSumSquared
   }
-
-final class Game[F[_]](
-    private val topic: Topic[F, GameMessage],
-    private val q: Queue[F, Option[GameMessage]]
-):
-  def publish(m: GameMessage): F[Unit] = q.offer(Some(m))
-
-  def subscribe: Stream[F, GameMessage] = topic.subscribe(100)
-
-  def stop: F[Unit] = q.offer(None)
-
-  def deamon(using Concurrent[F]): F[Unit] =
-    Stream
-      .fromQueueNoneTerminated(q)
-      .through(topic.publish)
-      .compile
-      .drain
-
-object Game:
-  def create[F[_]: Concurrent]: F[Game[F]] =
-    for
-      q <- Queue.unbounded[F, Option[GameMessage]]
-      topic <- Topic[F, GameMessage]
-    yield Game(topic, q)
-
-final case class GameMessage(content: String)
