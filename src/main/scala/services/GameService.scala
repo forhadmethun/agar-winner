@@ -34,7 +34,7 @@ final class GameService[F[_]](
   protected def deamon(using Concurrent[F]): F[Unit] =
     game.flatMap(g => Spawn[F].start(g.daemon).void)
 
-  def extractMessage(text: String)(using Async[F]): F[GameMessage] = {
+  def extractAndProcessMessage(text: String)(using Async[F]): F[GameMessage] = {
     for {
       req <- MonadThrow[F].fromEither(decode[Request](text))
       msg <- req match {

@@ -25,14 +25,8 @@ final class GameRoutes[F[_]](gameService: GameService[F], logger: Logger[F])
 
       val in: Pipe[F, WebSocketFrame, Unit] =
         _.collect { case WebSocketFrame.Text(text, _) =>
-            gameService
-              .extractMessage(text)
-              .adaptErr(err => {
-                logger.error(err.toString)
-                err
-              })
-          }
-          .foreach(_.flatMap(gameService.publish))
+          gameService.extractAndProcessMessage(text)
+        }.foreach(_.flatMap(gameService.publish))
 
       builder.build(out.merge(gameService.playerListStream.flatMap(Stream.eval)), in)
     }
