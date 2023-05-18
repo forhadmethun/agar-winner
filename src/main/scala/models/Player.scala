@@ -53,14 +53,6 @@ object PlayerData {
     } yield PlayerData(uid, sid, playerName, locX, locY, color, radius)
   }
 
-  def increaseScore(playerData: PlayerData): PlayerData = {
-    playerData.copy(score = playerData.score + 1)
-  }
-
-  def increaseOrbsAbsorbed(playerData: PlayerData): PlayerData = {
-    playerData.copy(orbsAbsorbed = playerData.orbsAbsorbed + 1)
-  }
-
   def updatePlayerData(playerData: PlayerData): PlayerData = {
     playerData.copy(
       score = playerData.score + 1,
