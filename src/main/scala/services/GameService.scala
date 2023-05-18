@@ -85,9 +85,9 @@ final class GameService[F[_]](
     for {
       player <- playerService.getPlayer(uid)
       players <- playerService.getAllPlayers
-      collisionOrbOpt <- Async[F].pure(players.map(_.playerData).filter(_.uid != uid)
-        .find(isOrbCollidingWithPlayer(player.playerData, _)))
-      result <- handleCollisionPlayer(collisionOrbOpt, player)
+      collisionPlayerOpt <- Async[F].pure(players.filter(_.playerData.uid != uid)
+        .find(p => isOrbCollidingWithPlayer(player.playerData, p.playerData)))
+      result <- handleCollisionPlayer(collisionPlayerOpt, player)
     } yield result
   }
   private def handleCollisionOrb(collisionOrbOpt: Option[OrbData], player: Player[F])(using Async[F]): F[Option[Unit]] = {
@@ -103,14 +103,19 @@ final class GameService[F[_]](
       case None => Async[F].pure(None)
     }
   }
-  private def handleCollisionPlayer(collisionPlayerOpt: Option[PlayerData], player: Player[F])(using Async[F]): F[Option[Unit]] = {
+  private def handleCollisionPlayer(collisionPlayerOpt: Option[Player[F]], player: Player[F])(using Async[F]): F[Option[Unit]] = {
     collisionPlayerOpt match {
-      case Some(collisionPlayer) if player.playerData.radius > collisionPlayer.radius =>
-        val updatedPlayerData = updatePlayerData(player.playerData)
-        val updatedPConfig = updatePlayerConfig(player.playerConfig)
+      case Some(collisionPlayer) =>
+        val (playerToBeUpdated, playerToBeDeleted) =
+          if (player.playerData.radius > collisionPlayer.playerData.radius)
+            (player, collisionPlayer)
+          else
+            (collisionPlayer, player)
+        val updatedPlayerData = updatePlayerData(playerToBeUpdated.playerData)
+        val updatedPlayerConfig = updatePlayerConfig(playerToBeUpdated.playerConfig)
         for {
-          _ <- playerService.deletePlayer(collisionPlayer.uid)
-          _ <- playerService.savePlayer(updatedPConfig, updatedPlayerData)
+          _ <- playerService.deletePlayer(playerToBeDeleted.playerData.uid)
+          _ <- playerService.savePlayer(updatedPlayerConfig, updatedPlayerData)
         } yield Some(())
       case _ => Async[F].pure(None)
     }
