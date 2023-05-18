@@ -3,39 +3,33 @@ import io.circe.Codec
 import cats.effect.Sync
 import cats.syntax.all.*
 import cats.effect.unsafe.implicits.global
-import models.Settings._
+import models.Settings.*
+import util.ColorGenerator
+
+import java.util.UUID
+import scala.util.Random
 
 case class OrbData(uid: String, color: String, locX: Double, locY: Double, radius: Double)
   extends CircularShape derives Codec.AsObject
 
 object OrbData {
-  def apply[F[_]: Sync](): F[OrbData] = {
+  def apply[F[_] : Sync](): F[OrbData] = {
     for {
-      uid <- Sync[F].delay(java.util.UUID.randomUUID().toString)
-      color <- getRandomColor[F]
-      locX <- Sync[F].delay(scala.util.Random.nextInt(worldWidth))
-      locY <- Sync[F].delay(scala.util.Random.nextInt(worldHeight))
+      uid <- Sync[F].delay(UUID.randomUUID().toString)
+      orbData <- generateOrbData(uid)
+    } yield orbData
+  }
+
+  def apply[F[_] : Sync](uid: String): F[OrbData] = generateOrbData(uid)
+
+  def createUpdatedOrb[F[_] : Sync](collisionOrb: OrbData): F[OrbData] = OrbData[F](collisionOrb.uid)
+
+  private def generateOrbData[F[_] : Sync](uid: String): F[OrbData] = {
+    for {
+      color <- ColorGenerator.getRandomColor[F]
+      locX <- Sync[F].delay(Random.nextInt(worldWidth))
+      locY <- Sync[F].delay(Random.nextInt(worldHeight))
     } yield OrbData(uid, color, locX, locY, defaultOrbRadius)
-  }
-
-  def apply[F[_] : Sync](uid: String): F[OrbData] = {
-    for {
-      color <- getRandomColor[F]
-      locX <- Sync[F].delay(scala.util.Random.nextInt(worldWidth))
-      locY <- Sync[F].delay(scala.util.Random.nextInt(worldHeight))
-    } yield OrbData(uid, color, locX, locY, defaultOrbRadius)
-  }
-
-  private def getRandomColor[F[_]: Sync]: F[String] = {
-    for {
-      r <- Sync[F].delay(scala.util.Random.nextInt(151) + 50)
-      g <- Sync[F].delay(scala.util.Random.nextInt(151) + 50)
-      b <- Sync[F].delay(scala.util.Random.nextInt(151) + 50)
-    } yield s"rgb($r, $g, $b)"
-  }
-
-  def createUpdatedOrb[F[_] : Sync](collisionOrb: OrbData): F[OrbData] = {
-    OrbData[F](collisionOrb.uid)
   }
 }
 

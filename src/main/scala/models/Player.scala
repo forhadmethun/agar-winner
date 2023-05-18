@@ -6,6 +6,8 @@ import cats.syntax.all.*
 import cats.effect.unsafe.implicits.global
 import io.circe.Codec
 import models.Settings.*
+import util.ColorGenerator
+
 import java.util.UUID
 import scala.util.Random
 
@@ -46,7 +48,7 @@ object PlayerData {
       uid <- Sync[F].delay(UUID.randomUUID().toString)
       locX <- Sync[F].delay(Random.nextInt(worldWidth))
       locY <- Sync[F].delay(Random.nextInt(worldWidth))
-      color <- getRandomColor[F]
+      color <- ColorGenerator.getRandomColor[F]
       radius = defaultSize
     } yield PlayerData(uid, sid, playerName, locX, locY, color, radius)
   }
@@ -57,15 +59,6 @@ object PlayerData {
 
   def increaseOrbsAbsorbed(playerData: PlayerData): PlayerData = {
     playerData.copy(orbsAbsorbed = playerData.orbsAbsorbed + 1)
-  }
-
-  private def getRandomColor[F[_]: Sync]: F[String] = {
-    val maxColorValue = 256
-    for {
-      r <- Sync[F].delay(Random.nextInt(maxColorValue))
-      g <- Sync[F].delay(Random.nextInt(maxColorValue))
-      b <- Sync[F].delay(Random.nextInt(maxColorValue))
-    } yield s"rgb($r, $g, $b)"
   }
 
   def updatePlayerData(playerData: PlayerData): PlayerData = {
