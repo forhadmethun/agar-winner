@@ -37,6 +37,6 @@ case class Orb[F[_]](orbData: OrbData)
 
 object Orb:
   def generateOrbs[F[_] : Sync]: F[Vector[Orb[F]]] = {
-    Vector.fill(defaultOrbs)(OrbData[F]()).sequence.map(_.map(Orb(_)))
+    Vector.fill(defaultOrbs)(OrbData[F]()).traverse(_.map(Orb(_)))
   }
 
