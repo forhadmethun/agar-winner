@@ -18,15 +18,14 @@ trait PlayerRepository[F[_]]:
 
 object PlayerRepository:
   def inMemory[F[_]: Sync]: F[PlayerRepository[F]] =
-    Ref[F].of(Vector.empty[Player[F]]).map { ref =>
+    Ref[F].of(Map.empty[String, Player[F]]).map { ref =>
       new PlayerRepository[F]:
         def get(uid: String): F[Option[Player[F]]] =
-          ref.get.map(_.find(_.playerData.uid == uid))
-        def getAll: F[Vector[Player[F]]] = ref.get
+          ref.get.map(_.get(uid))
+        def getAll: F[Vector[Player[F]]] =
+          ref.get.map(_.values.toVector)
         def update(player: Player[F]): F[Unit] =
-          ref.update(
-            _.filterNot(_.playerData.uid == player.playerData.uid) :+ player
-          )
+          ref.update(_.updated(player.playerData.uid, player))
         def delete(uid: String): F[Unit] =
-          ref.update(_.filterNot(_.playerData.uid == uid))
+          ref.update(_ - uid)
     }

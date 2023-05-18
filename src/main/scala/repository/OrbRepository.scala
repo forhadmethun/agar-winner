@@ -18,15 +18,14 @@ trait OrbRepository[F[_]]:
 
 object OrbRepository:
   def inMemory[F[_]: Sync]: F[OrbRepository[F]] =
-    Ref[F].of(Vector.empty[Orb[F]]).map { ref =>
+    Ref[F].of(Map.empty[String, Orb[F]]).map { ref =>
       new OrbRepository[F]:
         def get(uid: String): F[Option[Orb[F]]] =
-          ref.get.map(_.find(_.orbData.uid == uid))
-        def getAll: F[Vector[Orb[F]]] = ref.get
+          ref.get.map(_.get(uid))
+        def getAll: F[Vector[Orb[F]]] =
+          ref.get.map(_.values.toVector)
         def save(orb: Orb[F]): F[Unit] =
-          ref.update(
-            _.filterNot(_.orbData.uid == orb.orbData.uid) :+ orb
-          )
+          ref.update(_.updated(orb.orbData.uid, orb))
         def saveAll(data: Vector[Orb[F]]): F[Unit] =
-          data.traverse_(orbData => save(orbData))
+          ref.update(_.++(data.map(orb => orb.orbData.uid -> orb)))
     }
