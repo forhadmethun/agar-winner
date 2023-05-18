@@ -7,10 +7,8 @@ import munit.*
 
 class OrbTest extends FunSuite {
   test("createUpdatedOrb should create an updated orb") {
-    given cats.effect.kernel.Async[IO] = IO.asyncForIO
-
     val collisionOrb = OrbData("orb1", "red", 15, 15, 3)
-    val updatedOrb = createUpdatedOrb(collisionOrb).unsafeRunSync()
+    val updatedOrb = createUpdatedOrb[IO](collisionOrb).unsafeRunSync()
     assertEquals(updatedOrb.uid, collisionOrb.uid)
   }
 }
