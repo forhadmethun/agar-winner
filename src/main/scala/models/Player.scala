@@ -6,6 +6,8 @@ import cats.syntax.all.*
 import cats.effect.unsafe.implicits.global
 import io.circe.Codec
 import models.Settings.*
+import java.util.UUID
+import scala.util.Random
 
 case class PlayerConfig
 (
@@ -41,9 +43,9 @@ case class PlayerData(
 object PlayerData {
   def createPlayerData[F[_]: Sync](playerName: String, sid: String): F[PlayerData] = {
     for {
-      uid <- Sync[F].delay(java.util.UUID.randomUUID().toString)
-      locX <- Sync[F].delay(scala.util.Random.nextInt(worldWidth) + 100)
-      locY <- Sync[F].delay(scala.util.Random.nextInt(worldWidth) + 100)
+      uid <- Sync[F].delay(UUID.randomUUID().toString)
+      locX <- Sync[F].delay(Random.nextInt(worldWidth))
+      locY <- Sync[F].delay(Random.nextInt(worldWidth))
       color <- getRandomColor[F]
       radius = defaultSize
     } yield PlayerData(uid, sid, playerName, locX, locY, color, radius)
@@ -58,10 +60,11 @@ object PlayerData {
   }
 
   private def getRandomColor[F[_]: Sync]: F[String] = {
+    val maxColorValue = 256
     for {
-      r <- Sync[F].delay(scala.util.Random.nextInt(150) + 50)
-      g <- Sync[F].delay(scala.util.Random.nextInt(150) + 50)
-      b <- Sync[F].delay(scala.util.Random.nextInt(150) + 50)
+      r <- Sync[F].delay(Random.nextInt(maxColorValue))
+      g <- Sync[F].delay(Random.nextInt(maxColorValue))
+      b <- Sync[F].delay(Random.nextInt(maxColorValue))
     } yield s"rgb($r, $g, $b)"
   }
 
