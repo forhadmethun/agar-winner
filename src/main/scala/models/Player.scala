@@ -77,5 +77,4 @@ object PlayerData {
   }
 }
 
-case class Player[F[_]](playerConfig: PlayerConfig, playerData: PlayerData):
-  def getData: PlayerData = playerData
+case class Player[F[_]](playerConfig: PlayerConfig, playerData: PlayerData)

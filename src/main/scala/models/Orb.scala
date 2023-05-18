@@ -39,8 +39,7 @@ object OrbData {
   }
 }
 
-case class Orb[F[_]](orbData: OrbData):
-  def getData: OrbData = orbData
+case class Orb[F[_]](orbData: OrbData)
 
 object Orb:
   def generateOrbs[F[_] : Sync]: F[Vector[Orb[F]]] = {

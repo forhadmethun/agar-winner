@@ -50,7 +50,7 @@ final class GameService[F[_]](
       orbs <- orbService.getAllOrbs
       _ <- playerService.savePlayer(playerConfig, playerData)
       msg <- InitMessageResponseData
-        .create[F](orbs.map(_.getData), playerData)
+        .create[F](orbs.map(_.orbData), playerData)
         .map(data =>
           GameMessage(Response.InitMessageResponse(data).asInstanceOf[Response].asJson.toString)
         )
@@ -68,7 +68,7 @@ final class GameService[F[_]](
       _ <- checkForCollision(pData.uid)
       _ <- checkForPlayerCollisions(pData.uid)
       msg <- Sync[F].pure(GameMessage(
-        Response.TickMessageResponse(TickMessageResponseData(pData, oData.map(_.getData)))
+        Response.TickMessageResponse(TickMessageResponseData(pData, oData.map(_.orbData)))
           .asInstanceOf[Response].asJson.toString))
     } yield msg
   }
@@ -122,7 +122,7 @@ final class GameService[F[_]](
       .map(players => {
         Sync[F]
           .pure(WebSocketFrame.Text(Response.PlayerListMessageResponse(
-            players.map(_.getData)).asInstanceOf[Response].asJson.toString))
+            players.map(_.playerData)).asInstanceOf[Response].asJson.toString))
       })
 
 object GameService:
