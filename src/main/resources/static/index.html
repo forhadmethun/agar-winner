@@ -5,24 +5,22 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.4.1/dist/css/bootstrap.min.css"
           integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
     
-  <script type="module" crossorigin src="index-26380569.js"></script>
-  <link rel="stylesheet" href="index-6331b6d1.css">
+  <script type="module" crossorigin src="index.js"></script>
+  <link rel="stylesheet" href="index.css">
 </head>
 <body>
 
 <div id="container">
     <div id="game-field" class="col-sm-12">
-<!--        <canvas id="game-board" style="background: url('star-field.gif'); background-size: cover;"></canvas>-->
-        <canvas id="game-board" style="background: url('starfield-99e70cb8.jpg')"></canvas>
+        <canvas id="game-board"></canvas>
         <div id="score-wrapper" class="hiddenOnStart" hidden>
-            <div>Score: <span class="player-score"></span></div>
+            <div>Score: <span class="player-score">0</span></div>
         </div>
         <div id="leader-board-wrapper" class="hiddenOnStart" hidden>
             <div id="leader-board">
-                <h3 class="text-center">Leader Board</h3>
+                <h3 class="text-center">Leaderboard</h3>
                 <hr>
-                <ol class="leader-board">
-                </ol>
+                <ol class="leader-board"></ol>
                 <hr>
             </div>
         </div>
@@ -37,30 +35,46 @@
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header text-center">
-                <h5 class="modal-title  w-100">Agar Winner</h5>
+                <h5 class="modal-title w-100">AgarWinner</h5>
             </div>
             <div class="modal-body">
                 <form class="name-form">
                     <div class="text-center error-message"></div>
-                    <input id="name-input" class="text-input text-center form-control" type="text" name="name-input"
-                           placeholder="Enter your name here" required>
+                    <input id="name-input" class="text-input text-center form-control underline-input" type="text" name="name-input" placeholder="Enter your name here" required>
                     <button type="submit" class="btn play-button play-guest">Play</button>
                 </form>
             </div>
-            <div class="modal-footer">
-                <div id="instructions">
-                    <label id="how-to-play">Instructions:</label>
-                    <ul>
-                        <li>Move mouse on the screen to move own character.</li>
-                        <li>Absorb orbs by running over them in order to grow.</li>
-                        <li>The larger you get the slower you are.</li>
-                        <li>Absorb smaller players to get larger without losing speed.</li>
-                    </ul>
-                </div>
+            <div id="instructions">
+                <ul>
+                    <li>Move mouse to control character</li>
+                    <li>Absorb orbs to grow</li>
+                    <li>The larger you get the slower you are.</li>
+                    <li>Absorb smaller players to grow without slowing down</li>
+                </ul>
             </div>
         </div>
     </div>
 </div>
+
+<div class="modal fade" id="game-over" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+     aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header text-center">
+                <h5 class="modal-title w-100">Ooops!! Good Luck Next Time :) </h5>
+            </div>
+            <div class="modal-body">
+                <form class="name-form">
+                    <div id="score-message" class="text-center score-message">
+                        <div class="game-over-content">Score: <span class="player-score"></span></div>
+                    </div>
+                    <button id="play-again" type="submit" class="btn play-button play-guest">Play Again</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
 
 <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
         integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
