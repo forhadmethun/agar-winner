@@ -10,7 +10,7 @@ import fs2.concurrent.Topic
 import io.circe.parser.*
 import io.circe.syntax.*
 import fs2.{Stream, *}
-import manager.GameServer
+import core.GameServer
 import models.*
 import models.OrbData.*
 import models.PlayerData.*

@@ -1,4 +1,4 @@
-package manager
+package core
 
 import cats.*
 import cats.effect.*
