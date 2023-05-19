@@ -18,7 +18,7 @@ import services.GameService
 final class GameRoutes[F[_]](gameService: GameService[F], logger: Logger[F])
     extends Http4sDsl[F]:
   def wsRoutes(using Async[F])(builder: WebSocketBuilder2[F]): HttpRoutes[F] =
-    HttpRoutes.of[F] { case GET -> Root =>
+    HttpRoutes.of[F] { case GET -> Root / "ws" =>
       val out: Stream[F, WebSocketFrame] = gameService.subscribe.map(msg => {
         WebSocketFrame.Text(msg.content)
       })

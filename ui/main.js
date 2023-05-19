@@ -143,7 +143,7 @@ canvas.addEventListener('mousemove', (event) => {
 // =============WEBSOCKET============
 // ==================================
 
-const socket = new WebSocket('ws://localhost:8090');
+const socket = new WebSocket('ws://localhost:8090/ws');
 
 function init() {
     draw()
