@@ -4,31 +4,36 @@ import cats.effect.Sync
 import cats.syntax.all.*
 import cats.effect.unsafe.implicits.global
 import models.Settings.*
-import util.ColorGenerator
+import cats.effect.std.UUIDGen
+import util.RandomUtil.*
 
-import java.util.UUID
-import scala.util.Random
-
-case class OrbData(uid: String, color: String, locX: Double, locY: Double, radius: Double)
-  extends CircularShape derives Codec.AsObject
+case class OrbData(
+    uid: String,
+    color: String,
+    locX: Double,
+    locY: Double,
+    radius: Double
+) extends CircularShape
+    derives Codec.AsObject
 
 object OrbData {
-  def apply[F[_] : Sync](): F[OrbData] = {
+  def apply[F[_]: Sync](): F[OrbData] = {
     for {
-      uid <- Sync[F].delay(UUID.randomUUID().toString)
+      uid <- UUIDGen.randomString[F]
       orbData <- generateOrbData(uid)
     } yield orbData
   }
 
-  def apply[F[_] : Sync](uid: String): F[OrbData] = generateOrbData(uid)
+  def apply[F[_]: Sync](uid: String): F[OrbData] = generateOrbData[F](uid)
 
-  def createUpdatedOrb[F[_] : Sync](collisionOrb: OrbData): F[OrbData] = OrbData[F](collisionOrb.uid)
+  def createUpdatedOrb[F[_]: Sync](collisionOrb: OrbData): F[OrbData] =
+    OrbData[F](collisionOrb.uid)
 
-  private def generateOrbData[F[_] : Sync](uid: String): F[OrbData] = {
+  private def generateOrbData[F[_]: Sync](uid: String): F[OrbData] = {
     for {
-      color <- ColorGenerator.getRandomColor[F]
-      locX <- Sync[F].delay(Random.nextInt(worldWidth))
-      locY <- Sync[F].delay(Random.nextInt(worldHeight))
+      color <- getRandomColor[F]
+      locX <- getRandomInt[F](worldWidth)
+      locY <- getRandomInt[F](worldHeight)
     } yield OrbData(uid, color, locX, locY, defaultOrbRadius)
   }
 }
@@ -36,7 +41,6 @@ object OrbData {
 case class Orb[F[_]](orbData: OrbData)
 
 object Orb:
-  def generateOrbs[F[_] : Sync]: F[Vector[Orb[F]]] = {
+  def generateOrbs[F[_]: Sync]: F[Vector[Orb[F]]] = {
     Vector.fill(defaultOrbs)(OrbData[F]()).traverse(_.map(Orb(_)))
   }
-
