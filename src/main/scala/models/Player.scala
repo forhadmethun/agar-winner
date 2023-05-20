@@ -1,6 +1,5 @@
 package models
 
-import cats.effect.IO
 import cats.effect.Sync
 import cats.effect.std.UUIDGen
 import cats.syntax.all.*

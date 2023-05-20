@@ -18,7 +18,7 @@ trait GameMessageProcessor[F[_]]:
   def processTickMessage(tickMsg: Request with Request.TickMessage): F[GameMessage]
 
 object GameMessageProcessor:
-  def create[F[_]: Async](
+  def create[F[_]: Sync](
       playerService: PlayerService[F],
       orbService: OrbService[F],
       collisionProcessor: CollisionProcessor[F]

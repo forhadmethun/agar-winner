@@ -9,7 +9,6 @@ import models.PlayerData.*
 import models.PlayerConfig.*
 import models.Settings.*
 import services.*
-import cats.effect.Async
 
 trait CollisionProcessor[F[_]]:
   def checkAndProcessOrbCollision(uid: String): F[Unit]
@@ -18,7 +17,7 @@ trait CollisionProcessor[F[_]]:
   def handleCollisionPlayer(collisionPlayerOpt: Option[Player[F]], player: Player[F]): F[Option[Unit]]
 
 object CollisionProcessor:
-  def create[F[_]: Async](
+  def create[F[_]: Sync](
                            playerService: PlayerService[F],
                            orbService: OrbService[F]
                          ): CollisionProcessor[F] = new CollisionProcessor[F] {
@@ -52,7 +51,7 @@ object CollisionProcessor:
             _ <- orbService.saveOrb(updatedOrb)
             _ <- playerService.savePlayer(updatedPConfig, updatedPlayerData)
           } yield Some(())
-        case None => Async[F].pure(None)
+        case None => Sync[F].pure(None)
       }
     }
 
@@ -70,7 +69,7 @@ object CollisionProcessor:
             _ <- playerService.deletePlayer(playerToBeDeleted.playerData.uid)
             _ <- playerService.savePlayer(updatedPlayerConfig, updatedPlayerData)
           } yield Some(())
-        case _ => Async[F].pure(None)
+        case _ => Sync[F].pure(None)
       }
     }
   }

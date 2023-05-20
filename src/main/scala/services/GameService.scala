@@ -43,6 +43,6 @@ object GameService:
       gameStreamUpdater = GameStreamUpdater.create[F](playerService)
       gameMessageProcessor = GameMessageProcessor.create[F](
         playerService, orbService, CollisionProcessor.create[F](playerService, orbService))
-      service = GameService(Async[F].pure(gameServer), gameStreamUpdater, gameMessageProcessor)
+      service = GameService(Sync[F].pure(gameServer), gameStreamUpdater, gameMessageProcessor)
       _ <- service.daemon
     yield service

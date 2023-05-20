@@ -11,21 +11,16 @@ import fs2.*
 import models.{Orb, OrbData}
 import repository.OrbRepository
 
-final class OrbService[F[_]](
-    val repo: OrbRepository[F]
-):
+final class OrbService[F[_]](val repo: OrbRepository[F]):
   def getAllOrbs: F[Vector[Orb[F]]] =
     repo.getAll
 
-  def saveOrb(orb: OrbData)(using Concurrent[F]): F[Orb[F]] = {
-    val player = Orb[F](orb)
-    for _ <- repo.save(player)
-      yield player
-  }
-
+  def saveOrb(orbData: OrbData)(using Monad[F]): F[Orb[F]] =
+    val orb = Orb[F](orbData)
+    repo.save(orb).as(orb)
 
 object OrbService:
-  def create[F[_]: Async]: F[OrbService[F]] =
+  def create[F[_]: Sync]: F[OrbService[F]] =
     for
       repo <- OrbRepository.inMemory[F]
       orbs <- Orb.generateOrbs[F]

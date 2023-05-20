@@ -11,9 +11,7 @@ import fs2.*
 import repository.PlayerRepository
 import models.{Player, PlayerConfig, PlayerData}
 
-final class PlayerService[F[_]](
-    val repo: PlayerRepository[F]
-):
+final class PlayerService[F[_]](val repo: PlayerRepository[F]):
   def getAllPlayers: F[Vector[Player[F]]] =
     repo.getAll
 
@@ -25,18 +23,16 @@ final class PlayerService[F[_]](
           .fromOption(_, new IllegalArgumentException(s"No player found with id: $uid "))
       )
 
-  def savePlayer(playerConfig: PlayerConfig, playerData: PlayerData)(using Concurrent[F]): F[Player[F]] = {
+  def savePlayer(playerConfig: PlayerConfig, playerData: PlayerData)(using Monad[F]): F[Player[F]] =
     val player = Player[F](playerConfig, playerData)
-    for _ <- repo.update(player)
-      yield player
-  }
+    repo.update(player).as(player)
 
-  def deletePlayer(uid: String)(using Concurrent[F]): F[Unit] =
+  def deletePlayer(uid: String): F[Unit] =
     repo.delete(uid)
 
 
 object PlayerService:
-  def create[F[_]: Async]: F[PlayerService[F]] =
+  def create[F[_]: Sync]: F[PlayerService[F]] =
     for
       repo <- PlayerRepository.inMemory[F]
       service = PlayerService(repo)
