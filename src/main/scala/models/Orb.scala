@@ -3,29 +3,40 @@ import io.circe.Codec
 import cats.effect.Sync
 import cats.syntax.all.*
 import cats.effect.unsafe.implicits.global
-import models.Settings._
+import models.Settings.*
+import util.ColorGenerator
 
-case class Orb(color: String, locX: Int, locY: Int, radius: Int)
-    derives Codec.AsObject
+import java.util.UUID
+import scala.util.Random
 
-object Orb {
-  def apply[F[_]: Sync](worldWidth: Int, worldHeight: Int): F[Orb] = {
+case class OrbData(uid: String, color: String, locX: Double, locY: Double, radius: Double)
+  extends CircularShape derives Codec.AsObject
+
+object OrbData {
+  def apply[F[_] : Sync](): F[OrbData] = {
     for {
-      color <- getRandomColor[F]
-      locX <- Sync[F].delay(scala.util.Random.nextInt(worldWidth))
-      locY <- Sync[F].delay(scala.util.Random.nextInt(worldHeight))
-    } yield Orb(color, locX, locY, defaultOrbRadius)
+      uid <- Sync[F].delay(UUID.randomUUID().toString)
+      orbData <- generateOrbData(uid)
+    } yield orbData
   }
 
-  private def getRandomColor[F[_]: Sync]: F[String] = {
-    for {
-      r <- Sync[F].delay(scala.util.Random.nextInt(151) + 50)
-      g <- Sync[F].delay(scala.util.Random.nextInt(151) + 50)
-      b <- Sync[F].delay(scala.util.Random.nextInt(151) + 50)
-    } yield s"rgb($r, $g, $b)"
-  }
+  def apply[F[_] : Sync](uid: String): F[OrbData] = generateOrbData(uid)
 
-  def generateOrbs[F[_]: Sync]: F[Vector[Orb]] = {
-    Vector.fill(defaultOrbs)(Orb[F](worldWidth, worldHeight)).sequence
+  def createUpdatedOrb[F[_] : Sync](collisionOrb: OrbData): F[OrbData] = OrbData[F](collisionOrb.uid)
+
+  private def generateOrbData[F[_] : Sync](uid: String): F[OrbData] = {
+    for {
+      color <- ColorGenerator.getRandomColor[F]
+      locX <- Sync[F].delay(Random.nextInt(worldWidth))
+      locY <- Sync[F].delay(Random.nextInt(worldHeight))
+    } yield OrbData(uid, color, locX, locY, defaultOrbRadius)
   }
 }
+
+case class Orb[F[_]](orbData: OrbData)
+
+object Orb:
+  def generateOrbs[F[_] : Sync]: F[Vector[Orb[F]]] = {
+    Vector.fill(defaultOrbs)(OrbData[F]()).traverse(_.map(Orb(_)))
+  }
+

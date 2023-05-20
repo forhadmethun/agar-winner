@@ -14,6 +14,16 @@ let context = canvas.getContext('2d');
 canvas.width = windowWidth;
 canvas.height = windowHeight;
 
+const colorList = [
+    "#171717", "#2E2E2E", "#454545", "#5C5C5C", "#737373", "#8A8A8A", "#5B7586", "#8CA2B0", "#36454F",
+    "#BF181D", "#ED7377", "#B35F00", "#000080", "#38B261", "#96DEAE", "#E3AE09", "#FADB7C", "#635345",
+    "#BEAEA1", "#362624", "#212121", "#383838", "#B7D100", "#E5FF2E", "#168900", "#ADFF9E", "#D100D1",
+    "#999999", "#6B6B6B", "#DEDEDE", "#B0B0B0", "#E4AD58", "#DD9A30", "#F1D4A7", "#483C32", "#AB9786",
+    "#7E6958", "#B75CFF", "#A32EFF", "#5C6380", "#DCDEE6", "#8C8C8C", "#A52217", "#EE8D85", "#EAE000",
+    "#BCB400", "#FFFDD0", "#E0B0FF", "#D40032", "#FF8DA7", "#ED4002", "#197D4B", "#93E9BE", "#024376"
+]
+canvas.style.backgroundColor = colorList[Math.floor(Math.random()*colorList.length)]
+
 $(window).on("load", function () {
     $('#game-start').modal('show')
 });
@@ -25,6 +35,11 @@ $('.name-form').submit((e) => {
     $('.modal').modal('hide');
     $('.hiddenOnStart').removeAttr('hidden');
     init();
+})
+
+$('#play-again').click((e) => {
+    e.preventDefault();
+    window.location.reload();
 })
 
 // ==================================
@@ -82,6 +97,18 @@ function drawOrbs() {
     });
 }
 
+function updatePlayerScore() {
+    $('.player-score').text(player.score || 0);
+}
+
+function updateLeaderBoard() {
+    $('.leader-board').empty();
+    players.sort((a, b) => b.score - a.score).forEach(player => {
+        const playerItem = $('<li class="leaderboard-player">').text(`${player.playerName}: ${player.score}`);
+        $('.leader-board').append(playerItem);
+    });
+}
+
 function resetTransform() {
     context.setTransform(1, 0, 0, 1, 0, 0);
 }
@@ -116,43 +143,63 @@ canvas.addEventListener('mousemove', (event) => {
 // =============WEBSOCKET============
 // ==================================
 
-const socket = new WebSocket('ws://localhost:8090');
+const socket = new WebSocket('ws://localhost:8090/ws');
 
 function init() {
     draw()
+    const sid =  generateSessionId()
+    player = { ...player, sid }
     socket.send(JSON.stringify({
         _type: 'InitMessage',
         data: {
-            playerName: player.name
+            playerName: player.name,
+            sid
         }
     }));
 }
 
-let c = 0
+function generateSessionId() {
+    return Date.now().toString(36) + Math.random().toString(36).substring(2)
+}
+
 socket.addEventListener('message', (event) => {
     const message = JSON.parse(event.data);
     switch (message && message._type) {
         case 'InitMessageResponse':
             orbs = message.data.orbs
-            player = {...player, ...message.data.playerData}
-            setInterval(() => {
-                if(player.uid && player.xVector) socket.send(JSON.stringify({
-                    _type: 'TickMessage',
-                    data: {
-                        uid: player.uid,
-                        xVector: player.xVector || 0,
-                        yVector: player.yVector || 0
-                    }
-                }));
-            }, 33);
+            if (player.sid === message.data.playerData.sid) {
+                player = {...player, ...message.data.playerData}
+                setInterval(() => {
+                    if (socket.readyState === WebSocket.OPEN && player.uid && player.xVector) socket.send(JSON.stringify({
+                        _type: 'TickMessage',
+                        data: {
+                            uid: player.uid,
+                            xVector: player.xVector || 0,
+                            yVector: player.yVector || 0
+                        }
+                    }));
+                }, 33);
+            }
             break;
         case 'PlayerListMessageResponse':
             players = message.data;
+            updateLeaderBoard();
             break;
         case 'TickMessageResponse':
-            player.locX = message.data.locX;
-            player.locY = message.data.locY;
+            if(player.sid === message.data.playerData.sid) {
+                player = {...player, ...message.data.playerData};
+                orbs = message.data.orbs;
+                updatePlayerScore();
+            }
             break;
-
     }
 });
+
+socket.onclose = function (e) {
+    console.log('WebSocket closed with code:', e.code);
+    console.log('Reason:', e.reason);
+    if (player.sid) {
+        $('#game-start').modal('hide')
+        $('#game-over').modal('show')
+    }
+}

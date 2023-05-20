@@ -14,6 +14,7 @@ import org.http4s.implicits.*
 
     def routes: HttpRoutes[F] =
       HttpRoutes.of[F] {
-        case request@GET -> Root / path if List(".html", ".css", ".js").exists(path.endsWith) =>
+        case request@GET -> Root / path if List(".html", ".css", ".js", ".ico").exists(path.endsWith) =>
           static(path, request)
+        case request@GET -> Root => static("index.html", request)
       }

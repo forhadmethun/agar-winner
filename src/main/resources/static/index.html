@@ -1,9 +1,90 @@
+<!DOCTYPE html>
 <html>
 <head>
-    <titl>AgarWinner</titl>
+    <title>Agar Winner</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.4.1/dist/css/bootstrap.min.css"
+          integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <script type="module" crossorigin src="index.js"></script>
+  <link rel="stylesheet" href="index.css">
 </head>
 <body>
-<h1>Hello world</h1>
+
+<div id="container">
+    <div id="game-field" class="col-sm-12">
+        <canvas id="game-board"></canvas>
+        <div id="score-wrapper" class="hiddenOnStart" hidden>
+            <div>Score: <span class="player-score">0</span></div>
+        </div>
+        <div id="leader-board-wrapper" class="hiddenOnStart" hidden>
+            <div id="leader-board">
+                <h3 class="text-center">Leaderboard</h3>
+                <hr>
+                <ol class="leader-board"></ol>
+                <hr>
+            </div>
+        </div>
+        <div id="game-message-wrapper">
+            <div id="game-message">{{gameMessage}}</div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="game-start" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+     aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header text-center">
+                <h5 class="modal-title w-100">AgarWinner</h5>
+            </div>
+            <div class="modal-body">
+                <form class="name-form">
+                    <div class="text-center error-message"></div>
+                    <input id="name-input" class="text-input text-center form-control underline-input" type="text" name="name-input" placeholder="Enter your name here" required>
+                    <button type="submit" class="btn play-button play-guest">Play</button>
+                </form>
+            </div>
+            <div id="instructions">
+                <ul>
+                    <li>Move mouse to control character</li>
+                    <li>Absorb orbs to grow</li>
+                    <li>The larger you get the slower you are</li>
+                    <li>Absorb smaller players to grow without slowing down</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="game-over" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+     aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header text-center">
+                <h5 class="modal-title w-100">Ooops!! Good Luck Next Time :) </h5>
+            </div>
+            <div class="modal-body">
+                <form class="name-form">
+                    <div id="score-message" class="text-center score-message">
+                        <div class="game-over-content">Score: <span class="player-score"></span></div>
+                    </div>
+                    <button id="play-again" type="submit" class="btn play-button play-guest">Play Again</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+        integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+        crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.14.7/dist/umd/popper.min.js"
+        integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+        crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/js/bootstrap.min.js"
+        integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+        crossorigin="anonymous"></script>
+
 </body>
-<script src="index.js"></script>
 </html>
