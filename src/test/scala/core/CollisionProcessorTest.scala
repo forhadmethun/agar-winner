@@ -1,11 +1,10 @@
-package services
+package core
 
-import models.*
-import models.Settings.*
-import munit.*
-import services.GameService.*
+import core.CollisionProcessor.{calculateNewLocation, isAABBTestPassing, isOrbCollidingWithPlayer, isPythagorasTestPassing}
+import models.{OrbData, PlayerData, TickData}
+import munit.FunSuite
 
-class GameServiceTest extends FunSuite {
+class CollisionProcessorTest extends FunSuite {
   test("calculateNewLocation should calculate new location correctly") {
     val playerData = PlayerData(uid = "player1", sid = "sid1", playerName = "Player 1", locX = 10, locY = 10, color = "red", radius = 5)
     val tickData = TickData(uid = "player1", xVector = 1, yVector = -1)

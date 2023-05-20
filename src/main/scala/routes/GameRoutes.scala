@@ -28,7 +28,8 @@ final class GameRoutes[F[_]](gameService: GameService[F], logger: Logger[F])
           gameService.extractAndProcessMessage(text)
         }.foreach(_.flatMap(gameService.publish))
 
-      builder.build(out.merge(gameService.playerListStream.flatMap(Stream.eval)), in)
+      builder.build(out.merge(
+        gameService.gameStreamUpdater.updatedPlayerList.flatMap(Stream.eval)), in)
     }
 
 object GameRoutes:
