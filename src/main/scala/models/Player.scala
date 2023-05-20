@@ -2,14 +2,12 @@ package models
 
 import cats.effect.IO
 import cats.effect.Sync
+import cats.effect.std.UUIDGen
 import cats.syntax.all.*
 import cats.effect.unsafe.implicits.global
 import io.circe.Codec
 import models.Settings.*
-import util.ColorGenerator
-
-import java.util.UUID
-import scala.util.Random
+import util.RandomUtil.*
 
 case class PlayerConfig
 (
@@ -45,12 +43,11 @@ case class PlayerData(
 object PlayerData {
   def createPlayerData[F[_]: Sync](playerName: String, sid: String): F[PlayerData] = {
     for {
-      uid <- Sync[F].delay(UUID.randomUUID().toString)
-      locX <- Sync[F].delay(Random.nextInt(worldWidth))
-      locY <- Sync[F].delay(Random.nextInt(worldWidth))
-      color <- ColorGenerator.getRandomColor[F]
-      radius = defaultSize
-    } yield PlayerData(uid, sid, playerName, locX, locY, color, radius)
+      uid <- UUIDGen.randomString[F]
+      color <- getRandomColor[F]
+      locX <- getRandomInt[F](worldWidth)
+      locY <- getRandomInt[F](worldHeight)
+    } yield PlayerData(uid, sid, playerName, locX, locY, color, defaultSize)
   }
 
   def updatePlayerData(playerData: PlayerData): PlayerData = {

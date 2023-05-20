@@ -1,7 +1,7 @@
 package models
 
 case object Settings {
-  val defaultOrbs: Int = 50
+  val defaultOrbs: Int = 75
   val defaultOrbRadius: Int = 5
   val defaultSpeed: Int = 6
   val defaultSize: Int = 6
@@ -12,5 +12,5 @@ case object Settings {
   val zoomValueChange: Double = 0.001
   val speedThreshold: Double = 0.005 
   val speedValueChange: Double = 0.005 
-  val radiusValueChange: Double = 0.75
+  val radiusValueChange: Double = 0.25
 }
