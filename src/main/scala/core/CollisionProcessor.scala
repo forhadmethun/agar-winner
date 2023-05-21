@@ -11,66 +11,47 @@ import models.Settings.*
 import services.*
 
 trait CollisionProcessor[F[_]]:
-  def checkAndProcessOrbCollision(uid: String): F[Unit]
-  def checkAndProcessPlayerCollisions(uid: String): F[Unit]
-  def handleCollisionOrb(collisionOrbOpt: Option[OrbData], player: Player[F]): F[Option[Unit]]
-  def handleCollisionPlayer(collisionPlayerOpt: Option[Player[F]], player: Player[F]): F[Option[Unit]]
+  def checkAndProcessOrbCollision(player: Player[F], orbs: Vector[Orb[F]]): F[Unit]
+  def checkAndProcessPlayerCollisions(player: Player[F], players: Vector[Player[F]]): F[Unit]
+  def handleCollisionOrb(collisionOrb: OrbData, player: Player[F]): F[Unit]
+  def handleCollisionPlayer(player: Player[F], collisionPlayer: Player[F]): F[Unit]
 
 object CollisionProcessor:
   def create[F[_]: Sync](
-                           playerService: PlayerService[F],
-                           orbService: OrbService[F]
-                         ): CollisionProcessor[F] = new CollisionProcessor[F] {
-    def checkAndProcessOrbCollision(uid: String): F[Unit] = {
+    playerService: PlayerService[F],
+    orbService: OrbService[F]
+  ): CollisionProcessor[F] = new CollisionProcessor[F] {
+
+    def checkAndProcessOrbCollision(player: Player[F], orbs: Vector[Orb[F]]): F[Unit] =
+      orbs.map(_.orbData)
+        .find(isOrbCollidingWithPlayer(player.playerData, _))
+        .fold(Sync[F].unit)(handleCollisionOrb(_, player))
+
+    def handleCollisionOrb(collisionOrb: OrbData, player: Player[F]): F[Unit] = {
       for {
-        player <- playerService.getPlayer(uid)
-        orbs <- orbService.getAllOrbs
-        collisionOrbOpt = orbs.map(_.orbData)
-          .find(orb => isOrbCollidingWithPlayer(player.playerData, orb))
-        _ <- handleCollisionOrb(collisionOrbOpt, player)
+        updatedOrb <- createUpdatedOrb(collisionOrb)
+        _ <- orbService.saveOrb(updatedOrb)
+        _ <- playerService.savePlayer(
+          updatePlayerConfig(player.playerConfig),
+          updatePlayerData(player.playerData)
+        )
       } yield ()
     }
 
-    def checkAndProcessPlayerCollisions(uid: String): F[Unit] = {
+    def checkAndProcessPlayerCollisions(player: Player[F], players: Vector[Player[F]]): F[Unit] =
+      players.filter(_.playerData.uid != player.playerData.uid)
+        .find(p => isOrbCollidingWithPlayer(player.playerData, p.playerData))
+        .fold(Sync[F].unit)(handleCollisionPlayer(player, _))
+
+    def handleCollisionPlayer(player: Player[F], collisionPlayer: Player[F]): F[Unit] = {
+      val (playerToBeUpdated, playerToBeDeleted) = Player.getPlayerToBeUpdatedAndDeleted(player, collisionPlayer)
       for {
-        player <- playerService.getPlayer(uid)
-        players <- playerService.getAllPlayers
-        collisionPlayerOpt = players.filter(_.playerData.uid != uid)
-          .find(p => isOrbCollidingWithPlayer(player.playerData, p.playerData))
-        _ <- handleCollisionPlayer(collisionPlayerOpt, player)
+        _ <- playerService.deletePlayer(playerToBeDeleted.playerData.uid)
+        _ <- playerService.savePlayer(
+          updatePlayerConfig(playerToBeUpdated.playerConfig),
+          updatePlayerData(playerToBeUpdated.playerData)
+        )
       } yield ()
-    }
-
-    def handleCollisionOrb(collisionOrbOpt: Option[OrbData], player: Player[F]): F[Option[Unit]] = {
-      collisionOrbOpt match {
-        case Some(collisionOrb) =>
-          val updatedPlayerData = updatePlayerData(player.playerData)
-          val updatedPConfig = updatePlayerConfig(player.playerConfig)
-          for {
-            updatedOrb <- createUpdatedOrb(collisionOrb)
-            _ <- orbService.saveOrb(updatedOrb)
-            _ <- playerService.savePlayer(updatedPConfig, updatedPlayerData)
-          } yield Some(())
-        case None => Sync[F].pure(None)
-      }
-    }
-
-    def handleCollisionPlayer(collisionPlayerOpt: Option[Player[F]], player: Player[F]): F[Option[Unit]] = {
-      collisionPlayerOpt match {
-        case Some(collisionPlayer) =>
-          val (playerToBeUpdated, playerToBeDeleted) =
-            if (player.playerData.radius > collisionPlayer.playerData.radius)
-              (player, collisionPlayer)
-            else
-              (collisionPlayer, player)
-          val updatedPlayerData = updatePlayerData(playerToBeUpdated.playerData)
-          val updatedPlayerConfig = updatePlayerConfig(playerToBeUpdated.playerConfig)
-          for {
-            _ <- playerService.deletePlayer(playerToBeDeleted.playerData.uid)
-            _ <- playerService.savePlayer(updatedPlayerConfig, updatedPlayerData)
-          } yield Some(())
-        case _ => Sync[F].pure(None)
-      }
     }
   }
 

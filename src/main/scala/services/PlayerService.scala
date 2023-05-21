@@ -5,9 +5,6 @@ import cats.implicits.*
 import cats.effect.*
 import cats.effect.std.Queue
 import cats.syntax.all.*
-import fs2.concurrent.Topic
-import io.circe.*
-import fs2.*
 import repository.PlayerRepository
 import models.{Player, PlayerConfig, PlayerData}
 
@@ -20,7 +17,7 @@ final class PlayerService[F[_]](val repo: PlayerRepository[F]):
       .get(uid)
       .flatMap(
         MonadThrow[F]
-          .fromOption(_, new IllegalArgumentException(s"No player found with id: $uid "))
+          .fromOption(_, new IllegalArgumentException(s"No player found with id: $uid"))
       )
 
   def savePlayer(playerConfig: PlayerConfig, playerData: PlayerData)(using Monad[F]): F[Player[F]] =
@@ -29,7 +26,6 @@ final class PlayerService[F[_]](val repo: PlayerRepository[F]):
 
   def deletePlayer(uid: String): F[Unit] =
     repo.delete(uid)
-
 
 object PlayerService:
   def create[F[_]: Sync]: F[PlayerService[F]] =

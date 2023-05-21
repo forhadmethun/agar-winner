@@ -1,12 +1,10 @@
 package util
 
-import cats.effect.IO
+import cats.effect.{IO, Sync}
 import cats.effect.unsafe.implicits.global
 import models.OrbData.createUpdatedOrb
 import munit.*
-
-import cats.effect.{IO, Sync}
-import cats.syntax.all._
+import cats.syntax.all.*
 import cats.effect.std.Random
 
 class RandomUtilTest extends FunSuite {

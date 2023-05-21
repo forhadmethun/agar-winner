@@ -59,3 +59,11 @@ object PlayerData {
 }
 
 case class Player[F[_]](playerConfig: PlayerConfig, playerData: PlayerData)
+
+object Player {
+  def getPlayerToBeUpdatedAndDeleted[F[_]](player: Player[F], collisionPlayer: Player[F]): (Player[F], Player[F]) =
+    if (player.playerData.radius > collisionPlayer.playerData.radius)
+      (player, collisionPlayer)
+    else
+      (collisionPlayer, player)
+}

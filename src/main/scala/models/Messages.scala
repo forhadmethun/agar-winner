@@ -23,7 +23,7 @@ object Request:
 case class InitData(playerName: String, sid: String)
 case class TickData(uid: String, xVector: Double, yVector: Double)
 
-enum Response derives ConfiguredEncoder:
+enum Response derives ConfiguredEncoder, ConfiguredDecoder:
   case InitMessageResponse(data: InitMessageResponseData)
   case PlayerListMessageResponse(data: Vector[PlayerData])
   case TickMessageResponse(data: TickMessageResponseData)
