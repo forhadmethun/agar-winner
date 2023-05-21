@@ -16,3 +16,6 @@ object RandomUtil:
 
   def getRandomInt[F[_] : Sync](n: Int): F[Int] =
     Random.scalaUtilRandom[F].flatMap(_.nextIntBounded(n))
+
+  def getRandomNextDouble[F[_] : Sync]: F[Double] =
+    Random.scalaUtilRandom[F].flatMap(_.nextDouble)

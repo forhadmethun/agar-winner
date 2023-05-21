@@ -19,6 +19,9 @@ final class OrbService[F[_]](val repo: OrbRepository[F]):
     val orb = Orb[F](orbData)
     repo.save(orb).as(orb)
 
+  def saveAllOrb(orbs: Vector[Orb[F]])(using Monad[F]): F[Vector[Orb[F]]] =
+    repo.saveAll(orbs).as(orbs)
+
   def getOrb(uid: String)(using MonadThrow[F]): F[Orb[F]] =
     repo
       .get(uid)

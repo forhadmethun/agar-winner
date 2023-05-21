@@ -49,8 +49,10 @@ object CollisionProcessor:
         _ <- playerService.deletePlayer(playerToBeDeleted.playerData.uid)
         _ <- playerService.savePlayer(
           updatePlayerConfig(playerToBeUpdated.playerConfig),
-          updatePlayerData(playerToBeUpdated.playerData)
-        )
+          updatePlayerData(playerToBeUpdated.playerData))
+        orbs <- Orb.generateNearestOrbs[F](playerToBeDeleted.playerData.locX, playerToBeDeleted.playerData.locY,
+          Math.sqrt(playerToBeDeleted.playerData.score).toInt)
+        _ <- orbService.saveAllOrb(orbs)
       } yield ()
     }
   }
