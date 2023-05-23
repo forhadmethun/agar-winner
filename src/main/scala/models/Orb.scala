@@ -18,10 +18,10 @@ case class OrbData(
 
 object OrbData {
   def apply[F[_]: Sync](): F[OrbData] = {
-    for {
+    for
       uid <- UUIDGen.randomString[F]
       orbData <- generateOrbData(uid)
-    } yield orbData
+    yield orbData
   }
 
   def apply[F[_]: Sync](uid: String): F[OrbData] = generateOrbData[F](uid)
@@ -30,22 +30,22 @@ object OrbData {
     OrbData[F](collisionOrb.uid)
 
   private def generateOrbData[F[_]: Sync](uid: String): F[OrbData] = {
-    for {
+    for
       color <- getRandomColor[F]
       locX <- getRandomInt[F](worldWidth)
       locY <- getRandomInt[F](worldHeight)
-    } yield OrbData(uid, color, locX, locY, defaultOrbRadius)
+    yield OrbData(uid, color, locX, locY, defaultOrbRadius)
   }
 
   def generateNearestOrbData[F[_] : Sync](locX: Double, locY: Double) = {
-    for {
+    for
       uid <- UUIDGen.randomString[F]
       color <- getRandomColor[F]
       randX <- getRandomNextDouble[F]
       randY <- getRandomNextDouble[F]
       orbX = locX + randX * proximityThreshold * 2 - proximityThreshold
       orbY = locY + randY * proximityThreshold * 2 - proximityThreshold
-    } yield OrbData(uid, color, orbX, orbY, defaultOrbRadius)
+    yield OrbData(uid, color, orbX, orbY, defaultOrbRadius)
   }
 }
 

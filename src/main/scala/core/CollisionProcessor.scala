@@ -28,14 +28,14 @@ object CollisionProcessor:
         .fold(Sync[F].unit)(handleCollisionOrb(_, player))
 
     def handleCollisionOrb(collisionOrb: OrbData, player: Player[F]): F[Unit] = {
-      for {
+      for
         updatedOrb <- createUpdatedOrb(collisionOrb)
         _ <- orbService.saveOrb(updatedOrb)
         _ <- playerService.savePlayer(
           updatePlayerConfig(player.playerConfig),
           updatePlayerData(player.playerData)
         )
-      } yield ()
+      yield ()
     }
 
     def checkAndProcessPlayerCollisions(player: Player[F], players: Vector[Player[F]]): F[Unit] =
@@ -45,7 +45,7 @@ object CollisionProcessor:
 
     def handleCollisionPlayer(player: Player[F], collisionPlayer: Player[F]): F[Unit] = {
       val (playerToBeUpdated, playerToBeDeleted) = Player.getPlayerToBeUpdatedAndDeleted(player, collisionPlayer)
-      for {
+      for
         _ <- playerService.deletePlayer(playerToBeDeleted.playerData.uid)
         _ <- playerService.savePlayer(
           updatePlayerConfig(playerToBeUpdated.playerConfig),
@@ -53,7 +53,7 @@ object CollisionProcessor:
         orbs <- Orb.generateNearestOrbs[F](playerToBeDeleted.playerData.locX, playerToBeDeleted.playerData.locY,
           Math.sqrt(playerToBeDeleted.playerData.score).toInt)
         _ <- orbService.saveAllOrb(orbs)
-      } yield ()
+      yield ()
     }
   }
 
@@ -68,13 +68,13 @@ object CollisionProcessor:
     val isAtTopBoundary = currentLocY < 0 && yVector > 0
     val isAtBottomBoundary = currentLocY > worldHeight && yVector < 0
 
-    val newLocX = if (isAtLeftBoundary || isAtRightBoundary) {
+    val newLocX = if isAtLeftBoundary || isAtRightBoundary then {
       currentLocX
     } else {
       currentLocX + speed * xVector
     }
 
-    val newLocY = if (isAtTopBoundary || isAtBottomBoundary) {
+    val newLocY = if isAtTopBoundary || isAtBottomBoundary then {
       currentLocY
     } else {
       currentLocY - speed * yVector

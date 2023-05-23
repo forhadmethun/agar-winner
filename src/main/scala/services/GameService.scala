@@ -25,13 +25,13 @@ final class GameService[F[_]]
     gameServer.flatMap(g => Spawn[F].start(g.daemon).void)
 
   def extractAndProcessMessage(text: String)(using Async[F]): F[GameMessage] = {
-    for {
+    for
       req <- MonadThrow[F].fromEither(decode[Request](text))
       msg <- req match {
         case initMsg: Request.InitMessage => gameMessageProcessor.processInitMessage(initMsg)
         case tickMsg: Request.TickMessage => gameMessageProcessor.processTickMessage(tickMsg)
       }
-    } yield msg
+    yield msg
   }
 
 object GameService:

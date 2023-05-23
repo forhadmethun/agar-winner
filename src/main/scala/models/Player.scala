@@ -19,9 +19,9 @@ case class PlayerConfig
 object PlayerConfig {
   def updatePlayerConfig(playerConfig: PlayerConfig): PlayerConfig = {
     playerConfig.copy(
-      zoom = if (playerConfig.zoom > zoomThreshold) playerConfig.zoom - zoomValueChange else playerConfig.zoom,
-      speed = if (playerConfig.speed < -speedThreshold) playerConfig.speed + speedValueChange
-      else if (playerConfig.speed > speedThreshold) playerConfig.speed - speedValueChange
+      zoom = if playerConfig.zoom > zoomThreshold then playerConfig.zoom - zoomValueChange else playerConfig.zoom,
+      speed = if playerConfig.speed < -speedThreshold then playerConfig.speed + speedValueChange
+      else if playerConfig.speed > speedThreshold then playerConfig.speed - speedValueChange
       else playerConfig.speed
     )
   }
@@ -41,12 +41,12 @@ case class PlayerData(
 
 object PlayerData {
   def createPlayerData[F[_]: Sync](playerName: String, sid: String): F[PlayerData] = {
-    for {
+    for
       uid <- UUIDGen.randomString[F]
       color <- getRandomColor[F]
       locX <- getRandomInt[F](worldWidth)
       locY <- getRandomInt[F](worldHeight)
-    } yield PlayerData(uid, sid, playerName, locX, locY, color, defaultSize)
+    yield PlayerData(uid, sid, playerName, locX, locY, color, defaultSize)
   }
 
   def updatePlayerData(playerData: PlayerData): PlayerData = {
@@ -62,7 +62,7 @@ case class Player[F[_]](playerConfig: PlayerConfig, playerData: PlayerData)
 
 object Player {
   def getPlayerToBeUpdatedAndDeleted[F[_]](player: Player[F], collisionPlayer: Player[F]): (Player[F], Player[F]) =
-    if (player.playerData.radius > collisionPlayer.playerData.radius)
+    if player.playerData.radius > collisionPlayer.playerData.radius then
       (player, collisionPlayer)
     else
       (collisionPlayer, player)

@@ -29,8 +29,8 @@ final class GameServer[F[_]](
 
 object GameServer {
   def create[F[_]: Concurrent]: F[GameServer[F]] =
-    for {
+    for
       q <- Queue.unbounded[F, Option[GameMessage]]
       topic <- Topic[F, GameMessage]
-    } yield new GameServer(topic, q)
+    yield new GameServer(topic, q)
 }

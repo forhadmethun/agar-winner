@@ -24,7 +24,7 @@ object GameMessageProcessor:
       collisionProcessor: CollisionProcessor[F]
   ): GameMessageProcessor[F] = new GameMessageProcessor[F] {
     def processInitMessage(initMsg: Request with Request.InitMessage): F[GameMessage] = {
-      for {
+      for
         playerData <- PlayerData.createPlayerData[F](initMsg.data.playerName, initMsg.data.sid)
         playerConfig = PlayerConfig(speed = defaultSpeed, zoom = defaultZoom)
         orbs <- orbService.getAllOrbs
@@ -32,11 +32,11 @@ object GameMessageProcessor:
         msg <- InitMessageResponseData
           .create[F](orbs.map(_.orbData), playerData)
           .map(data => GameMessage(Response.InitMessageResponse(data).asInstanceOf[Response].asJson.toString))
-      } yield msg
+      yield msg
     }
 
     def processTickMessage(tickMsg: Request with Request.TickMessage): F[GameMessage] = {
-      for {
+      for
         player <- playerService.getPlayer(tickMsg.data.uid)
         (newLocX, newLocY) = CollisionProcessor.calculateNewLocation(player.playerData, tickMsg.data, player.playerConfig.speed)
         updatedPlayer <- playerService.savePlayer(
@@ -49,6 +49,6 @@ object GameMessageProcessor:
         _ <- collisionProcessor.checkAndProcessPlayerCollisions(updatedPlayer, allPlayers)
         msg = GameMessage(Response.TickMessageResponse(TickMessageResponseData(updatedPlayer.playerData, allOrbs.map(_.orbData)))
           .asInstanceOf[Response].asJson.toString)
-      } yield msg
+      yield msg
     }
   }

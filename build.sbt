@@ -23,3 +23,5 @@ lazy val root = (project in file("."))
       "org.scalacheck" %% "scalacheck" % ScalaCheckVersion % "test"
     )
   )
+
+scalacOptions ++= Seq("-new-syntax", "-rewrite")
