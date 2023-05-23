@@ -17,19 +17,16 @@ class GameMessageProcessorTest extends FunSuite {
   val player: Player[IO] = Player[IO](playerConfig, playerData)
 
   test("processInitMessage should return the expected GameMessage") {
-    val initMsg: Request with Request.InitMessage =
-      Request.InitMessage(InitData(playerData.playerName, playerData.sid))
+    val initMsg: Request.InitMessage = Request.InitMessage(InitData(playerData.playerName, playerData.sid))
     val playerService = PlayerService.create[IO].unsafeRunSync()
     val orbService = OrbService.create[IO].unsafeRunSync()
     val collisionProcessor = CollisionProcessor.create(playerService, orbService)
     val gameMessageProcessor = GameMessageProcessor.create(playerService, orbService, collisionProcessor)
 
-    val msg = for {
+    val msg = for
       msg <- gameMessageProcessor.processInitMessage(initMsg)
       parsedMsg <- MonadThrow[IO].fromEither(decode[Response](msg.content))
-    } yield {
-      parsedMsg
-    }
+    yield parsedMsg
     val initMsgResponse = msg.unsafeRunSync()
     initMsgResponse match 
       case msg: Response.InitMessageResponse =>
@@ -39,23 +36,23 @@ class GameMessageProcessorTest extends FunSuite {
   }
 
   test("processTickMessage should return the expected GameMessage") {
-    val initMsg: Request with Request.InitMessage = Request.InitMessage(InitData("player1", "id1"))
+    val initMsg: Request.InitMessage = Request.InitMessage(InitData("player1", "id1"))
     val playerService = PlayerService.create[IO].unsafeRunSync()
     val orbService = OrbService.create[IO].unsafeRunSync()
     val collisionProcessor = CollisionProcessor.create[IO](playerService, orbService)
     val gameMessageProcessor = GameMessageProcessor.create[IO](playerService, orbService, collisionProcessor)
-    val initMsgResponse = for {
+    val initMsgResponse = for
       msg <- gameMessageProcessor.processInitMessage(initMsg)
       parsedMsg <- MonadThrow[IO].fromEither(decode[Response](msg.content))
-    } yield parsedMsg
+    yield parsedMsg
     val initResponse = initMsgResponse.unsafeRunSync()
     initResponse match {
       case initRes: Response.InitMessageResponse =>
-        val tickMessage: Request with Request.TickMessage = Request.TickMessage(TickData(initRes.data.playerData.uid, 0.022d, 0.977d))
-        val tickMsgResponse = for {
+        val tickMessage: Request.TickMessage = Request.TickMessage(TickData(initRes.data.playerData.uid, 0.022d, 0.977d))
+        val tickMsgResponse = for
           tickMsg <- gameMessageProcessor.processTickMessage(tickMessage)
           parsedMsg <- MonadThrow[IO].fromEither(decode[Response](tickMsg.content))
-        } yield parsedMsg
+        yield parsedMsg
         val tickResponse = tickMsgResponse.unsafeRunSync()
         tickResponse match
           case msg: Response.TickMessageResponse =>

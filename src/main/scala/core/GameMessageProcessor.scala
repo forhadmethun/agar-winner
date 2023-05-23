@@ -14,8 +14,8 @@ import models.Settings.*
 import services.{OrbService, PlayerService}
 
 trait GameMessageProcessor[F[_]]:
-  def processInitMessage(initMsg: Request with Request.InitMessage): F[GameMessage]
-  def processTickMessage(tickMsg: Request with Request.TickMessage): F[GameMessage]
+  def processInitMessage(initMsg: Request.InitMessage): F[GameMessage]
+  def processTickMessage(tickMsg: Request.TickMessage): F[GameMessage]
 
 object GameMessageProcessor:
   def create[F[_]: Sync](
@@ -23,7 +23,7 @@ object GameMessageProcessor:
       orbService: OrbService[F],
       collisionProcessor: CollisionProcessor[F]
   ): GameMessageProcessor[F] = new GameMessageProcessor[F] {
-    def processInitMessage(initMsg: Request with Request.InitMessage): F[GameMessage] = {
+    def processInitMessage(initMsg: Request.InitMessage): F[GameMessage] = {
       for
         playerData <- PlayerData.createPlayerData[F](initMsg.data.playerName, initMsg.data.sid)
         playerConfig = PlayerConfig(speed = defaultSpeed, zoom = defaultZoom)
@@ -35,7 +35,7 @@ object GameMessageProcessor:
       yield msg
     }
 
-    def processTickMessage(tickMsg: Request with Request.TickMessage): F[GameMessage] = {
+    def processTickMessage(tickMsg: Request.TickMessage): F[GameMessage] = {
       for
         player <- playerService.getPlayer(tickMsg.data.uid)
         (newLocX, newLocY) = CollisionProcessor.calculateNewLocation(player.playerData, tickMsg.data, player.playerConfig.speed)
