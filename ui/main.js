@@ -196,8 +196,6 @@ socket.addEventListener('message', (event) => {
 });
 
 socket.onclose = function (e) {
-    console.log('WebSocket closed with code:', e.code);
-    console.log('Reason:', e.reason);
     if (player.sid) {
         $('#game-start').modal('hide')
         $('#game-over').modal('show')

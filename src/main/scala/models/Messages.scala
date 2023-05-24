@@ -33,8 +33,3 @@ object Response:
 
 final case class InitMessageResponseData(orbs: Vector[OrbData], playerData: PlayerData)
 final case class TickMessageResponseData(playerData: PlayerData, orbs: Vector[OrbData])
-
-object InitMessageResponseData {
-  def create[F[_] : Sync](orbs: Vector[OrbData], playerData: PlayerData): F[InitMessageResponseData] =
-    Sync[F].pure(InitMessageResponseData(orbs, playerData))
-}

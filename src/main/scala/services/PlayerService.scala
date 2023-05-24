@@ -9,10 +9,10 @@ import repository.PlayerRepository
 import models.{Player, PlayerConfig, PlayerData}
 
 final class PlayerService[F[_]](val repo: PlayerRepository[F]):
-  def getAllPlayers: F[Vector[Player[F]]] =
+  def getAllPlayers: F[Vector[Player]] =
     repo.getAll
 
-  def getPlayer(uid: String)(using MonadThrow[F]): F[Player[F]] =
+  def getPlayer(uid: String)(using MonadThrow[F]): F[Player] =
     repo
       .get(uid)
       .flatMap(
@@ -20,8 +20,8 @@ final class PlayerService[F[_]](val repo: PlayerRepository[F]):
           .fromOption(_, new IllegalArgumentException(s"No player found with id: $uid"))
       )
 
-  def savePlayer(playerConfig: PlayerConfig, playerData: PlayerData)(using Monad[F]): F[Player[F]] =
-    val player = Player[F](playerConfig, playerData)
+  def savePlayer(playerConfig: PlayerConfig, playerData: PlayerData)(using Monad[F]): F[Player] =
+    val player = Player(playerConfig, playerData)
     repo.update(player).as(player)
 
   def deletePlayer(uid: String): F[Unit] =

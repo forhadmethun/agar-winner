@@ -11,11 +11,9 @@ import org.http4s.circe.*
 import org.http4s.dsl.*
 import org.http4s.server.websocket.{WebSocketBuilder, WebSocketBuilder2}
 import org.http4s.websocket.WebSocketFrame
-import org.typelevel.log4cats.Logger
-import org.typelevel.log4cats.slf4j.Slf4jLogger
 import services.GameService
 
-final class GameRoutes[F[_]](gameService: GameService[F], logger: Logger[F])
+final class GameRoutes[F[_]](gameService: GameService[F])
     extends Http4sDsl[F]:
   def wsRoutes(using Async[F])(builder: WebSocketBuilder2[F]): HttpRoutes[F] =
     HttpRoutes.of[F] { case GET -> Root / "ws" =>
@@ -28,12 +26,10 @@ final class GameRoutes[F[_]](gameService: GameService[F], logger: Logger[F])
           gameService.extractAndProcessMessage(text)
         }.foreach(_.flatMap(gameService.publish))
 
-      builder.build(out.merge(
-        gameService.gameStreamUpdater.updatedPlayerList.flatMap(Stream.eval)), in)
+      builder.build(out.merge(gameService.gameStreamUpdater.updatedPlayerList), in)
     }
 
 object GameRoutes:
   def setup[F[_]: Async]: F[GameRoutes[F]] =
-    val logger: Logger[F] = Slf4jLogger.getLogger[F]
     for service <- GameService.create[F]
-    yield GameRoutes[F](service, logger)
+    yield GameRoutes[F](service)

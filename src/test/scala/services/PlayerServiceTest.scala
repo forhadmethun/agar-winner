@@ -8,52 +8,27 @@ import repository.PlayerRepository
 import models.*
 import org.scalacheck.Gen
 import org.scalacheck.Prop.forAll
-class PlayerServiceTest extends FunSuite {
-  val playerConfigGen: Gen[PlayerConfig] = for {
-    speed <- Gen.posNum[Double]
-    zoom <- Gen.posNum[Double]
-  } yield PlayerConfig(speed = speed, zoom = zoom)
-
-  val playerDataGen: Gen[PlayerData] = for {
-    playerId <- Gen.alphaNumStr
-    playerName <- Gen.alphaNumStr
-    sid <- Gen.alphaNumStr
-    locX <- Gen.posNum[Double]
-    locY <- Gen.posNum[Double]
-    color <- Gen.alphaStr
-    radius <- Gen.posNum[Double]
-  } yield PlayerData(playerId, sid, playerName, locX, locY, color, radius)
-
+import util.PlayerTestBase
+class PlayerServiceTest extends FunSuite with PlayerTestBase {
   test("getAllPlayers should return all players") {
-    val getAllPlayersProp = forAll(Gen.listOfN(5, Gen.zip(playerConfigGen, playerDataGen))) { playersList =>
-      val players = playersList.map { case (playerConfig, playerData) => Player[IO](playerConfig, playerData) }
-      val repo = new PlayerRepository[IO] {
-        override def getAll: IO[Vector[Player[IO]]] = IO.pure(players.toVector)
-        override def get(uid: String): IO[Option[Player[IO]]] = ???
-        override def update(player: Player[IO]): IO[Unit] = ???
-        override def delete(uid: String): IO[Unit] = ???
-      }
+    val getAllProp = forAll(Gen.listOfN(3, playerDataGen), playerConfigGen) { (playerDataList, playerConfig) =>
+      val repo = PlayerRepository.inMemory[IO].unsafeRunSync()
       val service = new PlayerService[IO](repo)
+      val players = playerDataList.map(playerData => Player(playerConfig, playerData))
+      players.foreach(p => service.savePlayer(p.playerConfig, p.playerData).unsafeRunSync())
       val result = service.getAllPlayers.unsafeRunSync()
       result == players.toVector
     }
-    getAllPlayersProp.check()
+    getAllProp.check()
   }
 
   test("getPlayer should return a player with the given ID") {
-    val getPlayerProp = forAll(playerConfigGen, playerDataGen) { (playerConfig, playerData) =>
-      val player = Player[IO](playerConfig, playerData)
-      val repo = new PlayerRepository[IO] {
-        override def get(uid: String): IO[Option[Player[IO]]] =
-          if (uid == playerData.uid) IO.pure(Some(player)) else IO.pure(None)
-        override def getAll: IO[Vector[Player[IO]]] = ???
-        override def update(player: Player[IO]): IO[Unit] = ???
-        override def delete(uid: String): IO[Unit] = ???
-      }
-
-      val service = new PlayerService[IO](repo)
+    val getPlayerProp = forAll(playerDataGen, playerConfigGen) { (playerData, playerConfig) =>
+      val repo = PlayerRepository.inMemory[IO].unsafeRunSync()
+      val service = new PlayerService(repo)
+      service.savePlayer(playerConfig, playerData).unsafeRunSync()
       val result = service.getPlayer(playerData.uid).unsafeRunSync()
-      result == player
+      result.playerData == playerData && result.playerConfig == playerConfig
     }
     getPlayerProp.check()
   }
@@ -61,12 +36,7 @@ class PlayerServiceTest extends FunSuite {
   test("getPlayer should throw an exception when no player is found with the given ID") {
     val playerIdGen: Gen[String] = Gen.alphaNumStr
     val getPlayerProp = forAll(playerIdGen) { playerId =>
-      val repo = new PlayerRepository[IO] {
-        override def get(uid: String): IO[Option[Player[IO]]] = IO.pure(None)
-        override def getAll: IO[Vector[Player[IO]]] = ???
-        override def update(player: Player[IO]): IO[Unit] = ???
-        override def delete(uid: String): IO[Unit] = ???
-      }
+      val repo = PlayerRepository.inMemory[IO].unsafeRunSync()
       val service = new PlayerService(repo)
       val result = service.getPlayer(playerId).attempt.unsafeRunSync()
       result.isLeft && result.isInstanceOf[Left[Throwable, _]] &&
@@ -77,14 +47,10 @@ class PlayerServiceTest extends FunSuite {
   }
 
   test("savePlayer should return the saved player") {
-    val savePlayerProp = forAll(playerConfigGen, playerDataGen) { (playerConfig, playerData) =>
-      val repo = new PlayerRepository[IO] {
-        override def update(player: Player[IO]): IO[Unit] = IO.unit
-        override def get(uid: String): IO[Option[Player[IO]]] = ???
-        override def getAll: IO[Vector[Player[IO]]] = ???
-        override def delete(uid: String): IO[Unit] = ???
-      }
+    val savePlayerProp = forAll(playerDataGen, playerConfigGen) { (playerData, playerConfig) =>
+      val repo = PlayerRepository.inMemory[IO].unsafeRunSync()
       val service = new PlayerService(repo)
+      service.savePlayer(playerConfig, playerData).unsafeRunSync()
       val result = service.savePlayer(playerConfig, playerData).unsafeRunSync()
       result.playerConfig == playerConfig && result.playerData == playerData
     }
@@ -92,21 +58,13 @@ class PlayerServiceTest extends FunSuite {
   }
 
   test("deletePlayer should delete the player") {
-    val playerIdGen: Gen[String] = Gen.alphaNumStr
-    val playerIdProp = forAll(playerIdGen) { playerId =>
-      var deletedPlayerId: Option[String] = None
-      val repo = new PlayerRepository[IO] {
-        override def delete(uid: String): IO[Unit] = {
-          deletedPlayerId = Some(uid)
-          IO.unit
-        }
-        override def get(uid: String): IO[Option[Player[IO]]] = ???
-        override def getAll: IO[Vector[Player[IO]]] = ???
-        override def update(player: Player[IO]): IO[Unit] = ???
-      }
+    val playerIdProp = forAll(playerDataGen, playerConfigGen) { (playerData, playerConfig) =>
+      val repo = PlayerRepository.inMemory[IO].unsafeRunSync()
       val service = new PlayerService(repo)
-      service.deletePlayer(playerId).unsafeRunSync()
-      deletedPlayerId.contains(playerId)
+      service.savePlayer(playerConfig, playerData).unsafeRunSync()
+      service.deletePlayer(playerData.uid).unsafeRunSync()
+      val result = service.getAllPlayers.unsafeRunSync()
+      result.isEmpty
     }
     playerIdProp.check()
   }

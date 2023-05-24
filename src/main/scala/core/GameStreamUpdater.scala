@@ -9,14 +9,13 @@ import services.PlayerService
 import scala.concurrent.duration.*
 
 final class GameStreamUpdater[F[_]](val playerService: PlayerService[F]):
-  def updatedPlayerList(using Async[F]): Stream[F, F[WebSocketFrame]] =
+  def updatedPlayerList(using Async[F]): Stream[F, WebSocketFrame] =
     Stream
       .awakeEvery[F](33.milliseconds)
       .flatMap(_ => Stream.eval(playerService.getAllPlayers))
       .map(players => {
-        Sync[F]
-          .pure(WebSocketFrame.Text(Response.PlayerListMessageResponse(
-            players.map(_.playerData)).asInstanceOf[Response].asJson.toString))
+        val playerListResponse = Response.PlayerListMessageResponse(players.map(_.playerData))
+        WebSocketFrame.Text(playerListResponse.asJson.toString)
       })
 
 object GameStreamUpdater:

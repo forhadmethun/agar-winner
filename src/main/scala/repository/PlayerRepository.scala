@@ -11,20 +11,20 @@ import org.http4s.circe.*
 import org.http4s.dsl.*
 
 trait PlayerRepository[F[_]]:
-  def get(uid: String): F[Option[Player[F]]]
-  def getAll: F[Vector[Player[F]]]
-  def update(player: Player[F]): F[Unit]
+  def get(uid: String): F[Option[Player]]
+  def getAll: F[Vector[Player]]
+  def update(player: Player): F[Unit]
   def delete(uid: String): F[Unit]
 
 object PlayerRepository:
   def inMemory[F[_]: Sync]: F[PlayerRepository[F]] =
-    Ref[F].of(Map.empty[String, Player[F]]).map { ref =>
+    Ref[F].of(Map.empty[String, Player]).map { ref =>
       new PlayerRepository[F]:
-        def get(uid: String): F[Option[Player[F]]] =
+        def get(uid: String): F[Option[Player]] =
           ref.get.map(_.get(uid))
-        def getAll: F[Vector[Player[F]]] =
+        def getAll: F[Vector[Player]] =
           ref.get.map(_.values.toVector)
-        def update(player: Player[F]): F[Unit] =
+        def update(player: Player): F[Unit] =
           ref.update(_.updated(player.playerData.uid, player))
         def delete(uid: String): F[Unit] =
           ref.update(_ - uid)

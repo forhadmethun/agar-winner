@@ -14,7 +14,7 @@ import services.{OrbService, PlayerService}
 class GameMessageProcessorTest extends FunSuite {
   val playerConfig: PlayerConfig = PlayerConfig(speed = 0, zoom = 0.0)
   val playerData: PlayerData = PlayerData("player1", "sid1", "John", 10.0, 10.0, "blue", 10.0)
-  val player: Player[IO] = Player[IO](playerConfig, playerData)
+  val player: Player = Player(playerConfig, playerData)
 
   test("processInitMessage should return the expected GameMessage") {
     val initMsg: Request.InitMessage = Request.InitMessage(InitData(playerData.playerName, playerData.sid))

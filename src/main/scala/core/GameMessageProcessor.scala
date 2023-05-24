@@ -4,6 +4,7 @@ import cats.*
 import cats.effect.*
 import cats.implicits.*
 import cats.syntax.all.*
+import core.LocationProcessor.*
 import models.OrbData.*
 import io.circe.parser.*
 import io.circe.syntax.*
@@ -29,16 +30,15 @@ object GameMessageProcessor:
         playerConfig = PlayerConfig(speed = defaultSpeed, zoom = defaultZoom)
         orbs <- orbService.getAllOrbs
         _ <- playerService.savePlayer(playerConfig, playerData)
-        msg <- InitMessageResponseData
-          .create[F](orbs.map(_.orbData), playerData)
-          .map(data => GameMessage(Response.InitMessageResponse(data).asInstanceOf[Response].asJson.toString))
+        initMessageResponse = Response.InitMessageResponse(InitMessageResponseData(orbs.map(_.orbData), playerData))
+        msg = GameMessage(initMessageResponse.asJson.toString)
       yield msg
     }
 
     def processTickMessage(tickMsg: Request.TickMessage): F[GameMessage] = {
       for
         player <- playerService.getPlayer(tickMsg.data.uid)
-        (newLocX, newLocY) = CollisionProcessor.calculateNewLocation(player.playerData, tickMsg.data, player.playerConfig.speed)
+        (newLocX, newLocY) = calculateNewLocation(player.playerData, tickMsg.data, player.playerConfig.speed)
         updatedPlayer <- playerService.savePlayer(
           player.playerConfig.copy(xVector = tickMsg.data.xVector, yVector = tickMsg.data.yVector),
           player.playerData.copy(locX = newLocX, locY = newLocY)
@@ -47,8 +47,8 @@ object GameMessageProcessor:
         allPlayers <- playerService.getAllPlayers
         _ <- collisionProcessor.checkAndProcessOrbCollision(updatedPlayer, allOrbs)
         _ <- collisionProcessor.checkAndProcessPlayerCollisions(updatedPlayer, allPlayers)
-        msg = GameMessage(Response.TickMessageResponse(TickMessageResponseData(updatedPlayer.playerData, allOrbs.map(_.orbData)))
-          .asInstanceOf[Response].asJson.toString)
+        responseMessage = Response.TickMessageResponse(TickMessageResponseData(updatedPlayer.playerData, allOrbs.map(_.orbData)))
+        msg = GameMessage(responseMessage.asJson.toString)
       yield msg
     }
   }

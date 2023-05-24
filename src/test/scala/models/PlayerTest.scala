@@ -43,8 +43,8 @@ class PlayerTest extends FunSuite {
   test("getPlayerToBeUpdatedAndDeleted should return players based on radius comparison") {
     val playerConfig = PlayerConfig(speed = 0, zoom = 0.0)
     val playerData = PlayerData("player1", "sid1", "John", 10.0, 10.0, "blue", 10.0)
-    val player1 = Player[IO](playerConfig, playerData)
-    val player2 = Player[IO](playerConfig, playerData.copy(radius = 5.0))
+    val player1 = Player(playerConfig, playerData)
+    val player2 = Player(playerConfig, playerData.copy(radius = 5.0))
 
     val (updatedPlayer, deletedPlayer) = Player.getPlayerToBeUpdatedAndDeleted[IO](player1, player2)
 

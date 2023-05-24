@@ -24,9 +24,9 @@ object AgarWinnerApplication extends IOApp.Simple with Http4sDsl[IO]:
         .withHostOption(Host.fromString("0.0.0.0"))
         .withPort(Port.fromInt(8090).get)
         .withHttpWebSocketApp { wsb =>
-          (HomeRoutes[IO].routes
+          HomeRoutes[IO].routes
             .combineK(HealthCheckRoutes[IO].routes)
-            .combineK(gameRoutes.wsRoutes(wsb)))
+            .combineK(gameRoutes.wsRoutes(wsb))
             .orNotFound
         }
         .withErrorHandler { e =>

@@ -12,17 +12,17 @@ import models.{Orb, OrbData}
 import repository.OrbRepository
 
 final class OrbService[F[_]](val repo: OrbRepository[F]):
-  def getAllOrbs: F[Vector[Orb[F]]] =
+  def getAllOrbs: F[Vector[Orb]] =
     repo.getAll
 
-  def saveOrb(orbData: OrbData)(using Monad[F]): F[Orb[F]] =
-    val orb = Orb[F](orbData)
+  def saveOrb(orbData: OrbData)(using Monad[F]): F[Orb] =
+    val orb = Orb(orbData)
     repo.save(orb).as(orb)
 
-  def saveAllOrb(orbs: Vector[Orb[F]])(using Monad[F]): F[Vector[Orb[F]]] =
+  def saveAllOrb(orbs: Vector[Orb])(using Monad[F]): F[Vector[Orb]] =
     repo.saveAll(orbs).as(orbs)
 
-  def getOrb(uid: String)(using MonadThrow[F]): F[Orb[F]] =
+  def getOrb(uid: String)(using MonadThrow[F]): F[Orb] =
     repo
       .get(uid)
       .flatMap(

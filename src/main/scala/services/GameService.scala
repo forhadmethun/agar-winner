@@ -11,18 +11,16 @@ import models.*
 
 final class GameService[F[_]]
 (
-  val gameServer: F[GameServer[F]],
+  val gameServer: GameServer[F],
   val gameStreamUpdater: GameStreamUpdater[F],
-  val gameMessageProcessor: GameMessageProcessor[F],
+  val gameMessageProcessor: GameMessageProcessor[F]
 ):
-  def subscribe: Stream[F, GameMessage] =
-    Stream.eval(gameServer).flatMap(_.subscribe)
+  def subscribe: Stream[F, GameMessage] = gameServer.subscribe
 
-  def publish(m: GameMessage)(using MonadThrow[F]): F[Unit] =
-    gameServer.flatMap(_.publish(m))
+  def publish(msg: GameMessage): F[Unit] = gameServer.publish(msg)
 
   protected def daemon(using Concurrent[F]): F[Unit] =
-    gameServer.flatMap(g => Spawn[F].start(g.daemon).void)
+    Spawn[F].start(gameServer.daemon).void
 
   def extractAndProcessMessage(text: String)(using Async[F]): F[GameMessage] = {
     for
@@ -43,6 +41,6 @@ object GameService:
       gameStreamUpdater = GameStreamUpdater.create[F](playerService)
       gameMessageProcessor = GameMessageProcessor.create[F](
         playerService, orbService, CollisionProcessor.create[F](playerService, orbService))
-      service = GameService(Sync[F].pure(gameServer), gameStreamUpdater, gameMessageProcessor)
+      service = GameService(gameServer, gameStreamUpdater, gameMessageProcessor)
       _ <- service.daemon
     yield service

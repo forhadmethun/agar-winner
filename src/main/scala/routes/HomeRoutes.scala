@@ -9,9 +9,8 @@ import org.http4s.dsl.io.*
 import org.http4s.implicits.*
 
   final class HomeRoutes[F[_] : Sync] extends Http4sDsl[F] :
-    def static(file: String, request: Request[F])(implicit F: Sync[F]): F[Response[F]] =
-      StaticFile.fromResource("/static/" + file, Some(request)).getOrElseF(NotFound())(F)
-
+    private def static(file: String, request: Request[F]): F[Response[F]] =
+      StaticFile.fromResource("/static/" + file, Some(request)).getOrElseF(NotFound())
     def routes: HttpRoutes[F] =
       HttpRoutes.of[F] {
         case request@GET -> Root / path if List(".html", ".css", ".js", ".ico").exists(path.endsWith) =>

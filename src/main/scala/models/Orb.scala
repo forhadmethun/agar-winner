@@ -49,13 +49,13 @@ object OrbData {
   }
 }
 
-case class Orb[F[_]](orbData: OrbData)
+case class Orb(orbData: OrbData)
 
 object Orb:
-  def generateOrbs[F[_]: Sync]: F[Vector[Orb[F]]] = {
+  def generateOrbs[F[_]: Sync]: F[Vector[Orb]] = {
     Vector.fill(defaultOrbs)(OrbData[F]()).traverse(_.map(Orb(_)))
   }
 
-  def generateNearestOrbs[F[_] : Sync](locX: Double, locY: Double, n: Int): F[Vector[Orb[F]]] = {
+  def generateNearestOrbs[F[_] : Sync](locX: Double, locY: Double, n: Int): F[Vector[Orb]] = {
     Vector.fill(n)(OrbData.generateNearestOrbData[F](locX, locY)).traverse(_.map(Orb(_)))
   }
