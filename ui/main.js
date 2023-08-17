@@ -74,18 +74,9 @@ function drawCurrentPlayer() {
     context.lineWidth = 3;
     context.strokeStyle = 'rgb(0,255,0)';
     context.stroke();
-
-    for (let i = 0; i < player.path?.length; i++) {
-        context.beginPath();
-        context.fillStyle = player.color;
-        context.arc(player.path[i][0], player.path[i][1], player.radius / 2, 0, Math.PI * 2);
-        context.fill();
-        context.lineWidth = 3;
-        context.strokeStyle = 'rgb(0,255,0)';
-        context.stroke();
-    }
-
+    drawBodyParts(player)
 }
+
 
 function drawPlayers() {
     players.filter(x => x.uid !== player.uid).forEach((p) => {
@@ -96,7 +87,20 @@ function drawPlayers() {
         context.lineWidth = 3;
         context.strokeStyle = 'rgb(0,255,0)';
         context.stroke();
+        drawBodyParts(p)
     });
+}
+
+function drawBodyParts(player) {
+    for (let i = 0; i < player.path?.length; i++) {
+        context.beginPath();
+        context.fillStyle = player.color;
+        context.arc(player.path[i][0], player.path[i][1], player.radius / 2, 0, Math.PI * 2);
+        context.fill();
+        context.lineWidth = 3;
+        context.strokeStyle = 'rgb(0,255,0)';
+        context.stroke();
+    }
 }
 
 function drawOrbs() {
@@ -154,7 +158,8 @@ canvas.addEventListener('mousemove', (event) => {
 // =============WEBSOCKET============
 // ==================================
 
-const socket = new WebSocket('ws://localhost:8090/ws');
+// const socket = new WebSocket('ws://localhost:8090/ws');
+const socket = new WebSocket('ws://5.135.186.53:8090/ws');
 
 function init() {
     draw()
