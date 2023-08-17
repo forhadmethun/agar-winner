@@ -41,11 +41,18 @@ object GameMessageProcessor:
         (newLocX, newLocY) = calculateNewLocation(player.playerData, tickMsg.data, player.playerConfig.speed)
         updatedPlayer <- playerService.savePlayer(
           player.playerConfig.copy(xVector = tickMsg.data.xVector, yVector = tickMsg.data.yVector),
-          player.playerData.copy(locX = newLocX, locY = newLocY)
+          player.playerData.copy(locX = newLocX, locY = newLocY, path = (newLocX, newLocY) :: player.playerData.path)
         )
         allOrbs <- orbService.getAllOrbs
         allPlayers <- playerService.getAllPlayers
-        _ <- collisionProcessor.checkAndProcessOrbCollision(updatedPlayer, allOrbs)
+        isCollidedWithOrb <- collisionProcessor.checkAndProcessOrbCollision(updatedPlayer, allOrbs)
+        _ <- Sync[F].whenA(!isCollidedWithOrb) {
+          val updatedPlayerData = updatedPlayer.playerData.copy(path = updatedPlayer.playerData.path.dropRight(1))
+          playerService.savePlayer(
+            updatedPlayer.playerConfig,
+            updatedPlayerData
+          )
+        }
         _ <- collisionProcessor.checkAndProcessPlayerCollisions(updatedPlayer, allPlayers)
         responseMessage = Response.TickMessageResponse(TickMessageResponseData(updatedPlayer.playerData, allOrbs.map(_.orbData)))
         msg = GameMessage(responseMessage.asJson.toString)

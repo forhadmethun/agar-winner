@@ -11,7 +11,7 @@ import models.PlayerConfig.*
 import models.Settings.*
 import services.*
 trait CollisionProcessor[F[_]]:
-  def checkAndProcessOrbCollision(player: Player, orbs: Vector[Orb]): F[Unit]
+  def checkAndProcessOrbCollision(player: Player, orbs: Vector[Orb]): F[Boolean]
   def checkAndProcessPlayerCollisions(player: Player, players: Vector[Player]): F[Unit]
   def handleCollisionOrb(collisionOrb: OrbData, player: Player): F[Unit]
   def handleCollisionPlayer(player: Player, collisionPlayer: Player): F[Unit]
@@ -22,10 +22,10 @@ object CollisionProcessor:
     orbService: OrbService[F]
   ): CollisionProcessor[F] = new CollisionProcessor[F] {
 
-    def checkAndProcessOrbCollision(player: Player, orbs: Vector[Orb]): F[Unit] =
+    def checkAndProcessOrbCollision(player: Player, orbs: Vector[Orb]): F[Boolean] =
       orbs.map(_.orbData)
         .find(isOrbCollidingWithPlayer(player.playerData, _))
-        .fold(Sync[F].unit)(handleCollisionOrb(_, player))
+        .fold(Sync[F].pure(false))(handleCollisionOrb(_, player).map(_ => true))
 
     def handleCollisionOrb(collisionOrb: OrbData, player: Player): F[Unit] = {
       for

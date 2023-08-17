@@ -74,6 +74,17 @@ function drawCurrentPlayer() {
     context.lineWidth = 3;
     context.strokeStyle = 'rgb(0,255,0)';
     context.stroke();
+
+    for (let i = 0; i < player.path?.length; i++) {
+        context.beginPath();
+        context.fillStyle = player.color;
+        context.arc(player.path[i][0], player.path[i][1], player.radius / 2, 0, Math.PI * 2);
+        context.fill();
+        context.lineWidth = 3;
+        context.strokeStyle = 'rgb(0,255,0)';
+        context.stroke();
+    }
+
 }
 
 function drawPlayers() {

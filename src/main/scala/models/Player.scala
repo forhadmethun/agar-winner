@@ -36,7 +36,8 @@ case class PlayerData(
     color: String,
     radius: Double,
     score: Int = 0,
-    orbsAbsorbed: Int = 0
+    orbsAbsorbed: Int = 0,
+    path: List[(Double, Double)] = List.empty
 ) extends CircularShape derives Codec.AsObject
 
 object PlayerData {
@@ -46,7 +47,7 @@ object PlayerData {
       color <- getRandomColor[F]
       locX <- getRandomInt[F](worldWidth)
       locY <- getRandomInt[F](worldHeight)
-    yield PlayerData(uid, sid, playerName, locX, locY, color, defaultSize)
+    yield PlayerData(uid, sid, playerName, locX, locY, color, defaultSize, path = List((locX, locY)))
   }
 
   def updatePlayerData(playerData: PlayerData): PlayerData = {
